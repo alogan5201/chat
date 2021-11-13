@@ -1,0 +1,28 @@
+{
+  "cwd": "/home/a/Desktop/test-f7",
+  "type": [
+    "web",
+    "pwa",
+    "capacitor"
+  ],
+  "name": "My App",
+  "framework": "react",
+  "template": "tabs",
+  "bundler": "vite",
+  "cssPreProcessor": "less",
+  "theming": {
+    "customColor": false,
+    "color": "#007aff",
+    "darkTheme": false,
+    "iconFonts": true,
+    "fillBars": false
+  },
+  "customBuild": false,
+  "pkg": "io.framework7.myapp",
+  "capacitor": {
+    "platforms": [
+      "ios",
+      "android"
+    ]
+  }
+}

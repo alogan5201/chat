@@ -1,0 +1,51 @@
+.chats-page {
+  html:not(.theme-dark) & {
+    --f7-page-bg-color: #fff;
+  }
+}
+.chats-list {
+  --f7-list-bg-color: transparent;
+  --f7-list-item-after-font-size: 15px;
+  --f7-swipeout-button-padding-horizontal: 16px;
+  .item-media img {
+    width: 58px;
+    height: 58px;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 50%;
+  }
+  .swipeout-actions-left,
+  .swipeout-actions-right {
+    a {
+      width: 80px;
+      box-sizing: border-box;
+      flex-direction: column;
+      justify-content: center;
+    }
+  }
+}
+
+.contacts-page {
+  --f7-page-bg-color: var(--f7-list-bg-color);
+}
+.contacts-list {
+  .item-media img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: center;
+  }
+}
+
+.contacts-list-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+  line-height: 40px;
+  // font-size: 24px;
+  .theme-dark & {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
