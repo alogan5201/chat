@@ -45,9 +45,15 @@ import {
   GoogleAuthProvider,
 } from "firebase/auth";
 import { ref, set, onValue } from "firebase/database";
-import { collection, doc, getDoc, setDoc } from "firebase/firestore";
+import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
+const handleSignIn = async () => {
+  await updateDoc(doc(firestore, "users", auth.currentUser.uid), {
+    uid: auth.currentUser.uid,
+    isOnline: true,
+  });
+};
 onAuthStateChanged(auth, (user) => {
   //const { userctx, setUser } = useContext(UserContext);
   if (user) {
@@ -55,7 +61,7 @@ onAuthStateChanged(auth, (user) => {
     // https://firebase.google.com/docs/reference/js/firebase.User
 
     getRedirectResult(auth)
-      .then(async (result) => {
+      .then((result) => {
         // This gives you a Google Access Token. You can use it to access Google APIs.
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const token = credential.accessToken;
@@ -68,13 +74,8 @@ onAuthStateChanged(auth, (user) => {
         const email = user.email;
         const photoURL = user.photoURL;
         const emailVerified = user.emailVerified;
-        let userInfo = {
-          id: uid,
-          name: displayName,
-          avatar: photoURL,
-        };
-        console.log(user);
-        await setDoc(doc(firestore, "users", uid), userInfo);
+        handleSignIn();
+        f7.loginScreen.close();
       })
       .catch((error) => {
         // Handle Errors here.

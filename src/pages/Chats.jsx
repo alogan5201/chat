@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   f7,
   List,
@@ -11,23 +11,33 @@ import {
   SwipeoutButton,
   Icon,
   ListIndex,
+  Button,
+  Popup,
+  View,
+  NavRight,
+  Block,
 } from "framework7-react";
+
 import "./Chats.less";
 import { contacts, chats } from "../data";
 import DoubleTickIcon from "../components/DoubleTickIcon";
+import OnlineIcon from "../components/OnlineIcon";
 import { database, auth, firestore } from "../services/firebase";
 import {
+  collection,
   doc,
-  updateDoc,
-  arrayUnion,
-  arrayRemove,
-  getDoc,
-  serverTimestamp,
+  setDoc,
+  query,
+  where,
+  orderBy,
+  getDocs,
 } from "firebase/firestore";
 
 import { ref, getDatabase } from "firebase/database";
 
 import { useList } from "react-firebase-hooks/database";
+import { useCollectionData } from "react-firebase-hooks/firestore";
+import { deepCopy } from "@firebase/util";
 
 export default function Chats(props) {
   const { f7router } = props;
@@ -85,32 +95,23 @@ export default function Chats(props) {
   contactsSorted.forEach(({ name }) => {
     const key = name[0].toUpperCase();
     if (!groups[key]) groups[key] = [];
+    firestore;
   });
-  contactsSorted.forEach((myContact) => {
-    groups[myContact.name[0].toUpperCase()].push(myContact);
-  });
-  console.log(groups);
-  const [snapshots, loading, error] = useList(ref(database, "usersTable"));
-  const user = auth.currentUser;
 
-  snapshots.filter((snapshop) => {});
-  var otherUsers = snapshots.filter(function (snapshot) {
-    return snapshot.key !== user.uid;
-  });
-  const chatsRef = doc(firestore, "chats", "MyU9lVSaIWbf5uEYrKHV");
-  async function getSnapData() {
-    await updateDoc(chatsRef, {
-      messages: arrayUnion({
-        content: "this is a test",
-        createdAt: Date.now(),
-        uid: "usdjdjf",
-      }),
-    });
-  }
+  const user1 = auth.currentUser.uid;
+  const usersRef = collection(firestore, "users");
+  const q = query(usersRef, where("uid", "not-in", [user1]));
+  const [onlineUsers, loading, error] = useCollectionData(q);
 
-  //console.log(otherUsers);
+  const onPageBeforeRemove = () => {
+    // Destroy popup when page removed
+    console.log("beforeremove");
+  };
+  const onPageBeforeIn = () => {
+    console.log("before init");
+  };
   return (
-    <Page className="chats-page">
+    <Page className="chats-page" onPageBeforeRemove={onPageBeforeRemove}>
       <Navbar title="Chats" large transparent>
         <Link slot="left" loginScreenOpen="#my-login-screen">
           Login
@@ -125,7 +126,31 @@ export default function Chats(props) {
           }}
         />
       </Navbar>
-      <ListIndex indexes={Object.keys(groups)} listEl=".contacts-list" />
+
+      <List noChevron noHairlines mediaList className="chats-list">
+        {error && <strong>Error: {error}</strong>}
+        {loading && <span>Collection: Loading...</span>}
+        {onlineUsers && (
+          <ul>
+            {onlineUsers.map((doc) => (
+              <ListItem
+                key={doc.uid}
+                link={`/chats/${doc.uid}/`}
+                title={doc.name}
+                swipeout
+              >
+                <img
+                  slot="media"
+                  src={doc.avatar || "/avatars/person-circle.svg"}
+                />
+
+                <span slot="text">{<OnlineIcon />}</span>
+              </ListItem>
+            ))}
+          </ul>
+        )}
+      </List>
+
       <List contactsList noChevron noHairlines>
         {/*CONTACT LIST------------------------------------------------ */}
         {Object.keys(groups).map((groupKey) => (
@@ -140,6 +165,11 @@ export default function Chats(props) {
                 popupClose
               >
                 <img slot="media" src={`/avatars/${myContact.avatar}`} />
+                <span slot="text">
+                  {chat.lastMessageType === "sent" && <DoubleTickIcon />}
+
+                  {chat.lastMessageText}
+                </span>
               </ListItem>
             ))}
           </ListGroup>
@@ -198,36 +228,37 @@ export default function Chats(props) {
           </ListItem>
         ))}
       </List>
-
-      <div>
-        {error && <strong>Error: {error}</strong>}
-        {loading && <span>List: Loading...</span>}
-        {!loading && otherUsers && (
-          <List noChevron noHairlines mediaList className="chats-list">
-            <ul>
-              UserList:{" "}
-              {otherUsers.map((v) => (
-                <ListItem
-                  key={v.key}
-                  title={`${v.val().fullName}`}
-                  link={`/chats/${v.val().uid}/`}
-                >
-                  <img
-                    slot="media"
-                    src={`${v.val().profile_picture}`}
-                    loading="lazy"
-                    alt={`${v.val().fullName}`}
-                    onClick={() => onUserSelect(v)}
-                  />
-                </ListItem>
-              ))}
-            </ul>
-          </List>
-        )}
-      </div>
     </Page>
   );
 }
+
+const UserList = () => {
+  const otherUsers = MyFunction();
+  console.log(otherUsers);
+
+  return (
+    <div>
+      {otherUsers && (
+        <List noChevron noHairlines mediaList className="chats-list">
+          <ul>
+            UserList:{" "}
+            {otherUsers.map((v) => (
+              <ListItem key={v.id} title={v.name}>
+                <img
+                  slot="media"
+                  src={v.avatar}
+                  loading="lazy"
+                  alt={v.name}
+                  onClick={() => onUserSelect(v)}
+                />
+              </ListItem>
+            ))}
+          </ul>
+        </List>
+      )}
+    </div>
+  );
+};
 
 const DatabaseList = (props) => {
   const [snapshots, loading, error] = useList(ref(database, "usersTable"));

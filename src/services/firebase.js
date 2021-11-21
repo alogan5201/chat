@@ -18,7 +18,7 @@ const firebaseApp = firebase.initializeApp({
   appId: "1:515354421134:web:991bff92cb676c86afe6df",
 });
 import { ref, getDatabase } from "firebase/database";
-import { doc, getFirestore } from "firebase/firestore";
+import { doc, getFirestore, updateDoc } from "firebase/firestore";
 export const auth = getAuth(firebaseApp);
 export const firestore = getFirestore(firebaseApp);
 export const database = getDatabase(firebaseApp);
@@ -56,14 +56,11 @@ const redirectResults = () => {
     });
 };
 
-export const signOutWithGoogle = () => {
-  signOut(auth)
-    .then(() => {
-      console.log("signed out");
-    })
-    .catch((error) => {
-      console.log(error);
-    });
+export const signOutWithGoogle = async () => {
+  await updateDoc(doc(firestore, "users", auth.currentUser.uid), {
+    isOnline: false,
+  });
+  await signOut(auth);
 };
 
 const authState = () => {

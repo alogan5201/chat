@@ -1,26 +1,3 @@
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // User is signed in, see docs for a list of available properties
-    // https://firebase.google.com/docs/reference/js/firebase.User
-    const uid = user.uid;
-
-    const displayName = user.displayName;
-    const email = user.email;
-    const photoURL = user.photoURL;
-    const emailVerified = user.emailVerified;
-    const db = getFirestore();
-    const messageRef = collection(db, "messages");
-    const q = query(messageRef, orderBy("createdAt"), limit(25));
-    console.log(q);
-    //console.log(`user id is this number ${user.uid}`);
-    //console.log(`user photoURL is this number ${photoURL}`);
-  } else {
-    // User is signed out
-    // ...
-    console.log("user signed out");
-  }
-});
-
 function ChatRoomPage() {
   const [user] = useAuthState(auth);
 

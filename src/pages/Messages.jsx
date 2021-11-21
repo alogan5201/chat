@@ -10,100 +10,47 @@ import {
   Messagebar,
 } from "framework7-react";
 import "./Messages.less";
-import { chats, contacts } from "../data";
+
 import DoubleTickIcon from "../components/DoubleTickIcon";
-import { database, auth } from "../services/firebase";
-import { useList } from "react-firebase-hooks/database";
-function ChatRoom() {
-  const dummy = useRef();
-  const messagesRef = firestore.collection("messages");
-  const query = messagesRef.orderBy("createdAt").limit(25);
-
-  const [messages] = useCollectionData(query, { idField: "id" });
-
-  const [formValue, setFormValue] = useState("");
-
-  const sendMessage = async (e) => {
-    e.preventDefault();
-
-    const { uid, photoURL } = auth.currentUser;
-
-    await messagesRef.add({
-      text: formValue,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-      uid,
-      photoURL,
-    });
-
-    setFormValue("");
-    dummy.current.scrollIntoView({ behavior: "smooth" });
-  };
-
-  return (
-    <>
-      <main>
-        {messages &&
-          messages.map((msg) => <ChatMessage key={msg.id} message={msg} />)}
-
-        <span ref={dummy}></span>
-      </main>
-
-      <form onSubmit={sendMessage}>
-        <input
-          value={formValue}
-          onChange={(e) => setFormValue(e.target.value)}
-          placeholder="say something nice"
-        />
-
-        <button type="submit" disabled={!formValue}>
-          🕊️
-        </button>
-      </form>
-    </>
-  );
-}
-
-function ChatMessage(props) {
-  const { text, uid, photoURL } = props.message;
-
-  const messageClass = uid === auth.currentUser.uid ? "sent" : "received";
-
-  return (
-    <>
-      <div className={`message ${messageClass}`}>
-        <img
-          src={
-            photoURL || "https://api.adorable.io/avatars/23/abott@adorable.png"
-          }
-        />
-        <p>{text}</p>
-      </div>
-    </>
-  );
-}
 
 export default function MessagesPage(props) {
+  const chats = [
+    {
+      userId: 1,
+      messages: [
+        {
+          text: "Hey Mark! How are you doing?",
+          type: "sent",
+          date: new Date().getTime() - 2 * 60 * 60 * 1000,
+        },
+        {
+          text: "Huge Facebook update is in the progress!",
+          type: "received",
+          date: new Date().getTime() - 1 * 60 * 60 * 1000,
+        },
+        {
+          text: "Congrats! 🎉",
+          type: "sent",
+          date: new Date().getTime() - 0.5 * 60 * 60 * 1000,
+        },
+      ],
+    },
+  ];
+  const contacts = [
+    {
+      id: 1,
+      avatar: "mark-zuckerberg.jpg",
+      name: "Mark Zuckerberg",
+      status: "Life is good",
+    },
+  ];
+
   const { f7route } = props;
   const userId = parseInt(f7route.params.id, 10);
-  console.log(`ChatUserTargetID = ${userId}`);
   const messagesData = chats.filter((chat) => chat.userId === userId)[0] || {
     messages: [],
   };
-  function writeUserData(userId, name, email, imageUrl) {
-    const userId = parseInt(f7route.params.id, 10);
-    const messagesRef = ref(database, "messages");
-    set(ref(database, "users/" + userId), {
-      username: name,
-      email: email,
-      profile_picture: imageUrl,
-    });
-  }
-
-  console.log(messagesData);
-
   const contact = contacts.filter((contact) => contact.id === userId)[0];
-
-  console.log(contact);
 
   const messagebarRef = useRef(null);
   const [messages, setMessages] = useState([...messagesData.messages]);
