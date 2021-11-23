@@ -1,5 +1,5 @@
 import $ from "dom7";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   f7,
   Navbar,
@@ -8,16 +8,31 @@ import {
   Messages,
   Message,
   Messagebar,
+  f7ready,
 } from "framework7-react";
 import "./Messages.less";
-
+import { firestore, auth } from "../services/firebase";
+import {
+  query,
+  orderBy,
+  collection,
+  onSnapshot,
+  limit,
+  doc,
+  where,
+  arrayUnion,
+  updateDoc,
+} from "firebase/firestore";
 import DoubleTickIcon from "../components/DoubleTickIcon";
+import { current } from "immer";
 
 export default function MessagesPage(props) {
+  const currentUser = auth.currentUser;
+
   const chats = [
     {
       userId: 1,
-      messages: [
+      myMessages: [
         {
           text: "Hey Mark! How are you doing?",
           type: "sent",
@@ -46,14 +61,23 @@ export default function MessagesPage(props) {
   ];
 
   const { f7route } = props;
-  const userId = parseInt(f7route.params.id, 10);
+
+  const userId = f7route.params.id;
+  const user1 = currentUser.uid;
+  const usersQuery = user1.concat(userId);
+  // console.log(usersQuery);
+  //console.log(userId);
   const messagesData = chats.filter((chat) => chat.userId === userId)[0] || {
-    messages: [],
+    myMessages: [],
   };
+  const myessagesData = chats.filter((chat) => chat.userId === userId)[0] || {
+    myMessages: [],
+  };
+
   const contact = contacts.filter((contact) => contact.id === userId)[0];
 
   const messagebarRef = useRef(null);
-  const [messages, setMessages] = useState([...messagesData.messages]);
+  const [myMessages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
 
   const messageTime = (message) =>
@@ -61,24 +85,34 @@ export default function MessagesPage(props) {
       message.date
     );
   const isMessageFirst = (message) => {
-    const messageIndex = messages.indexOf(message);
-    const previousMessage = messages[messageIndex - 1];
+    const messageIndex = myMessages.indexOf(message);
+    const previousMessage = myMessages[messageIndex - 1];
     return !previousMessage || previousMessage.type !== message.type;
   };
   const isMessageLast = (message) => {
-    const messageIndex = messages.indexOf(message);
-    const nextMessage = messages[messageIndex + 1];
+    const messageIndex = myMessages.indexOf(message);
+    const nextMessage = myMessages[messageIndex + 1];
     return !nextMessage || nextMessage.type !== message.type;
   };
 
-  const sendMessage = () => {
-    messages.push({
-      text: messageText,
-      date: new Date(),
-      type: "sent",
+  const sendMessage = async () => {
+    const docRef = doc(firestore, "chats", "MyU9lVSaIWbf5uEYrKHV");
+    await updateDoc(docRef, {
+      messages: arrayUnion({
+        uid: currentUser.uid,
+        createdAt: new Date(),
+        content: messageText,
+      }),
+    });
+
+    myMessages.push({
+      uid: currentUser.uid,
+      createdAt: new Date(),
+      content: messageText,
     });
     setMessageText("");
-    setMessages([...messages]);
+    setMessages([...myMessages]);
+
     setTimeout(() => {
       messagebarRef.current.f7Messagebar().focus();
     });
@@ -108,11 +142,29 @@ export default function MessagesPage(props) {
       $("html, body").scrollTop(0);
     }, 100);
   };
+
   // End of iOS web app fix
+  useEffect(() => {
+    //const usersQuery = user1.concat(user2);
+    f7ready(() => {
+      const chatsRef = collection(firestore, "chats");
+      const q = query(chatsRef, where("users", "array-contains", usersQuery));
+
+      const unsub = onSnapshot(q, (querySnapshot) => {
+        let myMessages = [];
+
+        querySnapshot.forEach((doc) => {
+          myMessages.push(doc.data().messages);
+        });
+        setMessages(myMessages[0]);
+      });
+      return () => unsub();
+    });
+  }, []);
 
   return (
-    <Page className="messages-page" noToolbar messagesContent>
-      <Navbar className="messages-navbar" backLink backLinkShowText={false}>
+    <Page className="myMessages-page" noToolbar messagesContent>
+      <Navbar className="myMessages-navbar" backLink backLinkShowText={false}>
         <Link slot="right" iconF7="videocam" />
         <Link slot="right" iconF7="phone" />
         <Link
@@ -120,9 +172,7 @@ export default function MessagesPage(props) {
           href={`/profile/${userId}/`}
           className="title-profile-link"
         >
-          <img src={`/avatars/${contact.avatar}`} loading="lazy" />
           <div>
-            <div>{contact.name}</div>
             <div className="subtitle">online</div>
           </div>
         </Link>
@@ -156,15 +206,15 @@ export default function MessagesPage(props) {
         )}
       </Messagebar>
       <Messages>
-        {messages.map((message, index) => (
+        {myMessages.map((message, index) => (
           <Message
             key={index}
             data-key={index}
             first={isMessageFirst(message)}
             last={isMessageLast(message)}
             tail={isMessageLast(message)}
-            type={message.type}
-            text={message.text}
+            type={message.uid === currentUser.uid ? "sent" : "received"}
+            text={message.content}
             className="message-appear-from-bottom"
           >
             <span slot="text-footer">

@@ -99,6 +99,7 @@ export default function Chats(props) {
   });
 
   const user1 = auth.currentUser.uid;
+  // console.log(auth.currentUser.uid);
   const usersRef = collection(firestore, "users");
   const q = query(usersRef, where("uid", "not-in", [user1]));
   const [onlineUsers, loading, error] = useCollectionData(q);
@@ -114,7 +115,7 @@ export default function Chats(props) {
     <Page className="chats-page" onPageBeforeRemove={onPageBeforeRemove}>
       <Navbar title="Chats" large transparent>
         <Link slot="left" loginScreenOpen="#my-login-screen">
-          Login
+          Logout
         </Link>
         <Link
           slot="right"
@@ -149,84 +150,6 @@ export default function Chats(props) {
             ))}
           </ul>
         )}
-      </List>
-
-      <List contactsList noChevron noHairlines>
-        {/*CONTACT LIST------------------------------------------------ */}
-        {Object.keys(groups).map((groupKey) => (
-          <ListGroup key={groupKey}>
-            <ListItem />
-            {groups[groupKey].map((myContact) => (
-              <ListItem
-                key={myContact.name}
-                link={`/chats/${myContact.id}/`}
-                title={myContact.name}
-                footer={myContact.status}
-                popupClose
-              >
-                <img slot="media" src={`/avatars/${myContact.avatar}`} />
-                <span slot="text">
-                  {chat.lastMessageType === "sent" && <DoubleTickIcon />}
-
-                  {chat.lastMessageText}
-                </span>
-              </ListItem>
-            ))}
-          </ListGroup>
-        ))}
-      </List>
-      <List noChevron noHairlines mediaList className="chats-list">
-        {chatsFormatted.map((chat) => (
-          <ListItem
-            key={chat.userId}
-            link={`/chats/${chat.userId}/`}
-            title={chat.contact.name}
-            after={chat.lastMessageDate}
-            swipeout
-          >
-            <img
-              slot="media"
-              src={`/avatars/${chat.contact.avatar}`}
-              loading="lazy"
-              alt={chat.contact.name}
-            />
-            <span slot="text">
-              {chat.lastMessageType === "sent" && <DoubleTickIcon />}
-
-              {chat.lastMessageText}
-            </span>
-            <SwipeoutActions left>
-              <SwipeoutButton
-                close
-                overswipe
-                color="blue"
-                onClick={swipeoutUnread}
-              >
-                <Icon f7="chat_bubble_fill" />
-                <span>Unread</span>
-              </SwipeoutButton>
-              <SwipeoutButton close color="gray" onClick={swipeoutPin}>
-                <Icon f7="pin_fill" />
-                <span>Pin</span>
-              </SwipeoutButton>
-            </SwipeoutActions>
-            <SwipeoutActions right>
-              <SwipeoutButton close color="gray" onClick={swipeoutMore}>
-                <Icon f7="ellipsis" />
-                <span>More</span>
-              </SwipeoutButton>
-              <SwipeoutButton
-                close
-                overswipe
-                color="light-blue"
-                onClick={swipeoutArchive}
-              >
-                <Icon f7="archivebox_fill" />
-                <span>Archive</span>
-              </SwipeoutButton>
-            </SwipeoutActions>
-          </ListItem>
-        ))}
       </List>
     </Page>
   );

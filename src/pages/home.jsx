@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import {
   Page,
   Navbar,
@@ -16,11 +16,40 @@ import {
   Col,
   Button,
 } from "framework7-react";
-import MobxStore from "../components/MobxStore";
+import People from "../components/People";
+import Input from "../components/Input";
+import Geohash from "latlon-geohash";
+import create from "zustand";
+import { auth, firestore } from "../services/firebase";
+import { doc, updateDoc } from "firebase/firestore";
 const HomePage = () => {
-  //const { userctx, setUser } = useContext(UserContext);
+  useEffect(() => {
+    const onSuccess = async (location) => {
+      let lat = location.coords.latitude;
+      let lng = location.coords.longitude;
 
-  //const [name, setName] = useLocalStorage("name", "");
+      const geohash = Geohash.encode(lat, lng, 4);
+
+      const uid = auth.currentUser.uid;
+      const userRef = doc(firestore, "users", uid);
+      await updateDoc(userRef, {
+        geoHash: geohash,
+      });
+      console.log("onSuccess");
+    };
+
+    const onError = (error) => {
+      console.log(error);
+    };
+    if (!("geolocation" in navigator)) {
+      onError({
+        code: 0,
+        message: "Geolocation not supported",
+      });
+    }
+
+    navigator.geolocation.getCurrentPosition(onSuccess, onError);
+  }, []);
 
   return (
     <Page name="home">
@@ -47,7 +76,7 @@ const HomePage = () => {
       </Navbar>
 
       {/* Page content */}
-      <MobxStore />
+
       <Block strong>
         <p>
           This is an example of tabs-layout application. The main point of such

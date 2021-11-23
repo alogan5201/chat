@@ -49,9 +49,12 @@ import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const handleSignIn = async () => {
-  await updateDoc(doc(firestore, "users", auth.currentUser.uid), {
+  await setDoc(doc(firestore, "users", auth.currentUser.uid), {
+    name: auth.currentUser.displayName,
     uid: auth.currentUser.uid,
+    avatar: auth.currentUser.photoURL,
     isOnline: true,
+    geoHash: "",
   });
 };
 onAuthStateChanged(auth, (user) => {
