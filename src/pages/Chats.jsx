@@ -2,27 +2,18 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   f7,
   List,
-  ListGroup,
   ListItem,
   Navbar,
   Link,
   Page,
-  SwipeoutActions,
-  SwipeoutButton,
-  Icon,
-  ListIndex,
-  Button,
-  Popup,
-  View,
-  NavRight,
-  Block,
+  f7ready,
 } from "framework7-react";
 
 import "./Chats.less";
 import { contacts, chats } from "../data";
-import DoubleTickIcon from "../components/DoubleTickIcon";
+
 import OnlineIcon from "../components/OnlineIcon";
-import { database, auth, firestore } from "../services/firebase";
+import { auth, firestore, signOutWithGoogle } from "../services/firebase";
 import {
   collection,
   doc,
@@ -40,44 +31,14 @@ import { useCollectionData } from "react-firebase-hooks/firestore";
 import { deepCopy } from "@firebase/util";
 
 export default function Chats(props) {
-  const { f7router } = props;
-  const swipeoutUnread = () => {
-    f7.dialog.alert("Unread");
-  };
-  const swipeoutPin = () => {
-    f7.dialog.alert("Pin");
-  };
-  const swipeoutMore = () => {
-    f7.dialog.alert("More");
-  };
-  const swipeoutArchive = () => {
-    f7.dialog.alert("Archive");
-  };
+  const { f7router, f7route } = props;
+
   const onUserSelect = (user) => {
     console.log("start new chat with", user);
     setTimeout(() => {
       f7router.navigate(`/chats/${user.id}/`);
     }, 300);
   };
-  const chatsFormatted = chats.map((chat) => {
-    const contact = contacts.filter((contact) => contact.id === chat.userId)[0];
-    //console.log("contact =");
-    //console.log(contact);
-    const lastMessage = chat.messages[chat.messages.length - 1];
-    // console.log("lastMessage =");
-    // console.log(lastMessage);
-    return {
-      ...chat,
-      lastMessageText: lastMessage.text,
-      lastMessageDate: Intl.DateTimeFormat("en", {
-        month: "short",
-        year: "numeric",
-        day: "numeric",
-      }).format(lastMessage.date),
-      lastMessageType: lastMessage.type,
-      contact,
-    };
-  });
 
   const myContacts = [
     {
@@ -100,8 +61,14 @@ export default function Chats(props) {
 
   const user1 = auth.currentUser.uid;
   // console.log(auth.currentUser.uid);
+  // where("uid", "not-in", [user1])
+  const myHashQuery = f7route.query.geohash;
   const usersRef = collection(firestore, "users");
-  const q = query(usersRef, where("uid", "not-in", [user1]));
+  const q = query(
+    usersRef,
+    where("isOnline", "==", true),
+    where("geoHash", "==", "dnh1")
+  );
   const [onlineUsers, loading, error] = useCollectionData(q);
 
   const onPageBeforeRemove = () => {
@@ -110,11 +77,26 @@ export default function Chats(props) {
   };
   const onPageBeforeIn = () => {
     console.log("before init");
+    if (f7route.query.geohash) {
+      console.log(typeof f7route.query.geohash);
+    }
   };
+  useEffect(() => {
+    f7ready(() => {
+      if (f7route.query.geohash) {
+        const myHashQuery = f7route.query.geohash;
+      }
+    });
+  }, []);
+
   return (
-    <Page className="chats-page" onPageBeforeRemove={onPageBeforeRemove}>
+    <Page
+      className="chats-page"
+      onPageBeforeRemove={onPageBeforeRemove}
+      onPageBeforeIn={onPageBeforeIn}
+    >
       <Navbar title="Chats" large transparent>
-        <Link slot="left" loginScreenOpen="#my-login-screen">
+        <Link slot="left" onClick={async () => signOutWithGoogle()}>
           Logout
         </Link>
         <Link
@@ -127,7 +109,7 @@ export default function Chats(props) {
           }}
         />
       </Navbar>
-
+      {f7route.query.geohash ? f7route.query.geohash : "No hash homie"}
       <List noChevron noHairlines mediaList className="chats-list">
         {error && <strong>Error: {error}</strong>}
         {loading && <span>Collection: Loading...</span>}
@@ -154,65 +136,3 @@ export default function Chats(props) {
     </Page>
   );
 }
-
-const UserList = () => {
-  const otherUsers = MyFunction();
-  console.log(otherUsers);
-
-  return (
-    <div>
-      {otherUsers && (
-        <List noChevron noHairlines mediaList className="chats-list">
-          <ul>
-            UserList:{" "}
-            {otherUsers.map((v) => (
-              <ListItem key={v.id} title={v.name}>
-                <img
-                  slot="media"
-                  src={v.avatar}
-                  loading="lazy"
-                  alt={v.name}
-                  onClick={() => onUserSelect(v)}
-                />
-              </ListItem>
-            ))}
-          </ul>
-        </List>
-      )}
-    </div>
-  );
-};
-
-const DatabaseList = (props) => {
-  const [snapshots, loading, error] = useList(ref(database, "usersTable"));
-  const user = auth.currentUser;
-  snapshots.filter((snapshop) => {});
-  var otherUsers = snapshots.filter(function (snapshot) {
-    return snapshot.key !== user.uid;
-  });
-  console.log(otherUsers);
-  return (
-    <div>
-      {error && <strong>Error: {error}</strong>}
-      {loading && <span>List: Loading...</span>}
-      {!loading && otherUsers && (
-        <List noChevron noHairlines mediaList className="chats-list">
-          <ul>
-            UserList:{" "}
-            {otherUsers.map((v) => (
-              <ListItem key={v.key} title={`${v.val().fullName}`}>
-                <img
-                  slot="media"
-                  src={`${v.val().profile_picture}`}
-                  loading="lazy"
-                  alt={`${v.val().fullName}`}
-                  onClick={() => onUserSelect(v)}
-                />
-              </ListItem>
-            ))}
-          </ul>
-        </List>
-      )}
-    </div>
-  );
-};

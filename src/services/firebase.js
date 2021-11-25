@@ -55,7 +55,11 @@ const redirectResults = () => {
       // ...
     });
 };
+/* 
 
+! danger, does not work 
+TODO make it work better 
+*/
 export const signOutWithGoogle = async () => {
   await updateDoc(doc(firestore, "users", auth.currentUser.uid), {
     isOnline: false,

@@ -34,7 +34,6 @@ import routes from "../js/routes";
 import {
   auth,
   signInWithGoogle,
-  signOutWithGoogle,
   database,
   connectionStatus,
   firestore,
@@ -49,6 +48,8 @@ import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const handleSignIn = async () => {
+  const currentUser = auth.currentUser;
+
   await setDoc(doc(firestore, "users", auth.currentUser.uid), {
     name: auth.currentUser.displayName,
     uid: auth.currentUser.uid,
@@ -57,6 +58,7 @@ const handleSignIn = async () => {
     geoHash: "",
   });
 };
+
 onAuthStateChanged(auth, (user) => {
   //const { userctx, setUser } = useContext(UserContext);
   if (user) {
@@ -77,8 +79,8 @@ onAuthStateChanged(auth, (user) => {
         const email = user.email;
         const photoURL = user.photoURL;
         const emailVerified = user.emailVerified;
+        console.log(user);
         handleSignIn();
-        f7.loginScreen.close();
       })
       .catch((error) => {
         // Handle Errors here.
@@ -96,26 +98,12 @@ onAuthStateChanged(auth, (user) => {
     console.log("user signed out");
   }
 });
-/*
-onValue(connectionStatus, (snapshot) => {
-  if (snapshot.exists()) {
-    if (auth.currentUser !== null) {
-
-
-      console.log(auth.currentUser.uid);
-    } else {
-      console.log("null");
-    }
-  } else {
-    console.log("does not exist");
-  }
-});
-*/
 const MyApp = () => {
   // Login screen demo data
   const [activeTab, setActiveTab] = useState("chats");
   const previousTab = useRef("chats");
   const [user, loading, error] = useAuthState(auth);
+  const [loginScreenOpened, setLoginScreenOpened] = useState(false);
   const device = getDevice();
   useEffect(() => {
     // Fix viewport scale on mobiles
@@ -163,6 +151,13 @@ const MyApp = () => {
     if (f7.device.capacitor) {
       capacitorApp.init(f7);
     }
+
+    if (user) {
+      console.log("theres a user");
+    } else if (!user) {
+      console.log("theres no user");
+      f7.loginScreen.open();
+    }
     // Call F7 APIs here
   });
   function onTabLinkClick(tab) {
@@ -175,6 +170,7 @@ const MyApp = () => {
     }
     previousTab.current = tab;
   }
+
   return (
     <App {...f7params}>
       {/* Left panel with cover effect*/}
@@ -296,32 +292,6 @@ const MyApp = () => {
           </Page>
         </View>
       </Popup>
-
-      <LoginScreen id="my-login-screen">
-        <View>
-          <Page loginScreen>
-            <List>
-              <LoginScreenTitle> Login</LoginScreenTitle>
-              <Button
-                color="red"
-                raised
-                outline
-                onClick={() => signOutWithGoogle()}
-              >
-                Logout
-              </Button>
-            </List>
-
-            <List>
-              <BlockFooter>
-                Test
-                <br />
-                Click "Sign In" to close Login Screen
-              </BlockFooter>
-            </List>
-          </Page>
-        </View>
-      </LoginScreen>
     </App>
   );
 };

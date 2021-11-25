@@ -1,20 +1,14 @@
+import path from "path";
+import reactRefresh from "@vitejs/plugin-react-refresh";
 
-import path from 'path';
-import reactRefresh from '@vitejs/plugin-react-refresh';
-
-
-
-const SRC_DIR = path.resolve(__dirname, './src');
-const PUBLIC_DIR = path.resolve(__dirname, './public');
-const BUILD_DIR = path.resolve(__dirname, './www',);
+const SRC_DIR = path.resolve(__dirname, "./src");
+const PUBLIC_DIR = path.resolve(__dirname, "./public");
+const BUILD_DIR = path.resolve(__dirname, "./www");
 
 export default {
-  plugins: [
-    reactRefresh(),
-
-  ],
+  plugins: [reactRefresh()],
   root: SRC_DIR,
-  base: '',
+  base: "",
   publicDir: PUBLIC_DIR,
   build: {
     outDir: BUILD_DIR,
@@ -23,11 +17,10 @@ export default {
   },
   resolve: {
     alias: {
-      '@': SRC_DIR,
+      "@": SRC_DIR,
     },
   },
   server: {
     host: true,
   },
-
 };

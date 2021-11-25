@@ -16,14 +16,12 @@ var routes = [
     path: "/",
     component: HomePage,
   },
+
   {
     path: "/about/",
     component: AboutPage,
   },
-  {
-    path: "/test/",
-    component: Test,
-  },
+
   {
     path: "/chats/",
     component: Chats,
@@ -59,7 +57,10 @@ var routes = [
     path: "/dynamic-route/blog/:blogId/post/:postId/",
     component: DynamicRoutePage,
   },
-
+  {
+    path: "/test/blog/:blogId/post/:postId/",
+    component: Test,
+  },
   {
     path: "/request-and-load/user/:userId/",
     async: function ({ router, to, resolve }) {

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState, useEffect, useCallback } from "react";
 import {
   Page,
   Navbar,
@@ -15,6 +15,8 @@ import {
   Row,
   Col,
   Button,
+  Stepper,
+  f7,
 } from "framework7-react";
 import People from "../components/People";
 import Input from "../components/Input";
@@ -22,34 +24,91 @@ import Geohash from "latlon-geohash";
 import create from "zustand";
 import { auth, firestore } from "../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import HaversineGeolocation from "haversine-geolocation";
 const HomePage = () => {
+  const [coords, setCoords] = useState([]);
+  const [meetingTime, setMeetingTime] = useState(5);
+  const [hash, setHash] = useState("");
+  const myQuery = "?geohash=bar";
+
   useEffect(() => {
-    const onSuccess = async (location) => {
-      let lat = location.coords.latitude;
-      let lng = location.coords.longitude;
+    const getUserLocation = () => {
+      const onSuccess = async (location) => {
+        let lat = location.coords.latitude;
+        let lng = location.coords.longitude;
+        // 33.8141499 -84.4388509
+        const geohash = Geohash.encode(lat, lng, 4);
+        console.log(lat, lng);
+        const uid = auth.currentUser.uid;
+        const userRef = doc(firestore, "users", uid);
+        await updateDoc(userRef, {
+          geoHash: geohash,
+        });
+        setCoords([lat, lng]);
+        setHash(geohash);
+        console.log("onSuccess");
+      };
 
-      const geohash = Geohash.encode(lat, lng, 4);
+      const onError = (error) => {
+        console.log(error);
+      };
+      if (!("geolocation" in navigator)) {
+        onError({
+          code: 0,
+          message: "Geolocation not supported",
+        });
+      }
 
-      const uid = auth.currentUser.uid;
-      const userRef = doc(firestore, "users", uid);
-      await updateDoc(userRef, {
-        geoHash: geohash,
-      });
-      console.log("onSuccess");
+      navigator.geolocation.getCurrentPosition(onSuccess, onError);
     };
 
-    const onError = (error) => {
-      console.log(error);
-    };
-    if (!("geolocation" in navigator)) {
-      onError({
-        code: 0,
-        message: "Geolocation not supported",
-      });
+    (async () => {
+      const data = await HaversineGeolocation.isGeolocationAvailable();
+      const currentPoint = {
+        latitude: data.coords.latitude,
+        longitude: data.coords.longitude,
+        accuracy: data.coords.accuracy,
+      };
+      if (data) {
+        let lat = currentPoint.latitude;
+        let lng = currentPoint.longitude;
+
+        const twelveMileRadius = Geohash.encode(lat, lng, 4);
+        const ninetyMileRadius = Geohash.encode(lat, lng, 3);
+
+        //console.log(lat, lng);
+
+        return meetingTime == 15
+          ? setHash(ninetyMileRadius)
+          : setHash(twelveMileRadius);
+        /**
+            if (meetingTime == 15) {
+          setHash(ninetyMileRadius);
+        } else if (15 > meetingTime) {
+          setHash(twelveMileRadius);
+        }
+         */
+      } else {
+        getUserLocation();
+        return;
+      }
+    })();
+  }, [meetingTime]);
+
+  const meetingTimeComputed = () => {
+    const value = meetingTime;
+
+    const hours = Math.floor(value / 60);
+    const minutes = value - hours * 60;
+    const formatted = [];
+    if (hours > 0) {
+      formatted.push(`${hours} ${hours > 1 ? "hours" : "hour"}`);
     }
-
-    navigator.geolocation.getCurrentPosition(onSuccess, onError);
-  }, []);
+    if (minutes > 0) {
+      formatted.push(`${minutes} `);
+    }
+    return formatted.join(" ");
+  };
 
   return (
     <Page name="home">
@@ -74,9 +133,41 @@ const HomePage = () => {
         </NavRight>
         <NavTitleLarge>My App</NavTitleLarge>
       </Navbar>
-
+      <div>coordinates: {coords}</div>
+      <div>geoHash: {hash}</div>
+      <BlockTitle>Custom value format</BlockTitle>
+      <List>
+        <ListItem header="GeoLocation Radius" title={meetingTimeComputed()}>
+          <Stepper
+            className="mystepper"
+            min={5}
+            max={15}
+            step={5}
+            value={meetingTime}
+            buttonsOnly={true}
+            small
+            fill
+            raised
+            slot="after"
+            onStepperChange={setMeetingTime}
+          />
+        </ListItem>
+      </List>
       {/* Page content */}
-
+      <Block strong>
+        <Row>
+          <Col width="50">
+            <Button fill raised>
+              Testbtn 1
+            </Button>
+          </Col>
+          <Col width="50">
+            <Button fill raised>
+              Testbtn 2
+            </Button>
+          </Col>
+        </Row>
+      </Block>
       <Block strong>
         <p>
           This is an example of tabs-layout application. The main point of such
@@ -92,7 +183,7 @@ const HomePage = () => {
       <BlockTitle>Navigation</BlockTitle>
       <List>
         <ListItem link="/mymessages/user/1/" title="My Messages" />
-        <ListItem link="/test/" title="Test" />
+        <ListItem link={`/chats/?geohash=${hash}`} title="TestPage" />
         <ListItem link="/catalog/" title="Catalog" />
         <ListItem link="/about/" title="About" />
         <ListItem link="/form/" title="Form" />
@@ -147,39 +238,5 @@ const HomePage = () => {
     </Page>
   );
 };
-
-function useLocalStorage(key, initialValue) {
-  // State to store our value
-  // Pass initial state function to useState so logic is only executed once
-  const [storedValue, setStoredValue] = useState(() => {
-    try {
-      // Get from local storage by key
-      const item = window.localStorage.getItem(key);
-      // Parse stored json or if none return initialValue
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      // If error also return initialValue
-      console.log(error);
-      return initialValue;
-    }
-  });
-  // Return a wrapped version of useState's setter function that ...
-  // ... persists the new value to localStorage.
-  const setValue = (value) => {
-    try {
-      // Allow value to be a function so we have same API as useState
-      const valueToStore =
-        value instanceof Function ? value(storedValue) : value;
-      // Save state
-      setStoredValue(valueToStore);
-      // Save to local storage
-      window.localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      // A more advanced implementation would handle the error case
-      console.log(error);
-    }
-  };
-  return [storedValue, setValue];
-}
 
 export default HomePage;

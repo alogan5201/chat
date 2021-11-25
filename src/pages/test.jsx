@@ -1,96 +1,53 @@
-import React, { useState } from "react";
-import {
-  Page,
-  Navbar,
-  Subnavbar,
-  Searchbar,
-  Block,
-  List,
-  ListItem,
-  theme,
-} from "framework7-react";
-import { onAuthStateChanged, getAuth } from "firebase/auth";
-import { useProvider, useCreateStore } from "mobx-store-provider";
-import AppStore from "../components/AppStore";
-import UserDisplay from "../components/UserDisplay";
-import MobxStore from "../components/MobxStore";
-export default () => {
-  const items = [];
-  for (let i = 1; i <= 10000; i += 1) {
-    items.push({
-      title: `Item ${i}`,
-      subtitle: `Subtitle ${i}`,
-    });
-  }
-  const [vlData, setVlData] = useState({
-    items: [],
-  });
+import React from "react";
+import { Page, Navbar, Block, Link, BlockTitle } from "framework7-react";
 
-  const searchAll = (query, searchItems) => {
-    const found = [];
-    for (let i = 0; i < searchItems.length; i += 1) {
-      if (
-        searchItems[i].title.toLowerCase().indexOf(query.toLowerCase()) >= 0 ||
-        query.trim() === ""
-      )
-        found.push(i);
-    }
-    return found; // return array with mathced indexes
-  };
-  const renderExternal = (vl, newData) => {
-    setVlData({ ...newData });
-  };
+const Test = (props) => {
+  const { f7route, f7router } = props;
 
+  console.log(typeof f7route.query.geohash);
   return (
-    <Page name="test">
-      <Navbar title="Virtual List" backLink="Back">
-        <Subnavbar inner={false}>
-          <Searchbar
-            searchContainer=".virtual-list"
-            searchItem="li"
-            searchIn=".item-title"
-            disableButton={!theme.aurora}
-          />
-        </Subnavbar>
-      </Navbar>
-      <MobxStore />
-      <Block>
-        <p>
-          Virtual List allows to render lists with huge amount of elements
-          without loss of performance. And it is fully compatible with all
-          Framework7 list components such as Search Bar, Infinite Scroll, Pull
-          To Refresh, Swipeouts (swipe-to-delete) and Sortable.
-        </p>
-        <p>Here is the example of virtual list with 10 000 items:</p>
-      </Block>
-      <List className="searchbar-not-found">
-        <ListItem title="Nothing found" />
-      </List>
-      <List
-        className="searchbar-found"
-        medialList
-        virtualList
-        virtualListParams={{
-          items,
-          searchAll,
-          renderExternal,
-          height: theme.ios ? 63 : theme.md ? 73 : 77,
-        }}
-      >
+    <Page>
+      <Navbar title="test" backLink="Back" />
+      <BlockTitle>Your Current GeoHash is {f7route.query.geohash}</BlockTitle>
+      <Block strong>
         <ul>
-          {vlData.items.map((item, index) => (
-            <ListItem
-              key={index}
-              mediaItem
-              link="#"
-              title={item.title}
-              subtitle={item.subtitle}
-              style={{ top: `${vlData.topPosition}px` }}
-              virtualListIndex={items.indexOf(item)}
-            />
-          ))}
+          <li>
+            <b>Url:</b> {f7route.url}
+          </li>
+          <li>
+            <b>Path:</b> {f7route.path}
+          </li>
+
+          <li>
+            <b>Params:</b>
+            <ul>
+              {Object.keys(f7route.params).map((key) => (
+                <li key={key}>
+                  <b>{key}:</b> {f7route.params[key]}
+                </li>
+              ))}
+            </ul>
+          </li>
+          <li>
+            <b>Query:</b>
+            <ul>
+              {Object.keys(f7route.query).map((key) => (
+                <li key={key}>
+                  <b>{key}:</b> {f7route.query[key]}
+                </li>
+              ))}
+            </ul>
+          </li>
+          <li>
+            <b>Route:</b> {f7route.route.path}
+          </li>
         </ul>
-      </List>
+      </Block>
+      <Block strong>
+        <Link onClick={() => f7router.back()}>Go back via Router API</Link>
+      </Block>
     </Page>
   );
 };
+
+export default Test;
