@@ -75,7 +75,7 @@ const HomePage = () => {
 
         const twelveMileRadius = Geohash.encode(lat, lng, 4);
         const ninetyMileRadius = Geohash.encode(lat, lng, 3);
-
+        // console.log(auth.currentUser);
         //console.log(lat, lng);
 
         return meetingTime == 15
@@ -133,6 +133,11 @@ const HomePage = () => {
         </NavRight>
         <NavTitleLarge>My App</NavTitleLarge>
       </Navbar>
+      {/* Toolbar */}
+      <Toolbar bottom>
+        <Link>Left Link</Link>
+        <Link href={`/chats/?geohash=${hash}`}>Chat</Link>
+      </Toolbar>
       <div>coordinates: {coords}</div>
       <div>geoHash: {hash}</div>
       <BlockTitle>Custom value format</BlockTitle>
@@ -168,18 +173,7 @@ const HomePage = () => {
           </Col>
         </Row>
       </Block>
-      <Block strong>
-        <p>
-          This is an example of tabs-layout application. The main point of such
-          tabbed layout is that each tab contains independent view with its own
-          routing and navigation.
-        </p>
 
-        <p>
-          Each tab/view may have different layout, different navbar type
-          (dynamic, fixed or static) or without navbar like this tab.
-        </p>
-      </Block>
       <BlockTitle>Navigation</BlockTitle>
       <List>
         <ListItem link="/mymessages/user/1/" title="My Messages" />

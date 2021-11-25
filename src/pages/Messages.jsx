@@ -22,6 +22,9 @@ import {
   where,
   arrayUnion,
   updateDoc,
+  getDoc,
+  Timestamp,
+  setDoc,
 } from "firebase/firestore";
 import DoubleTickIcon from "../components/DoubleTickIcon";
 import { current } from "immer";
@@ -29,57 +32,21 @@ import { current } from "immer";
 export default function MessagesPage(props) {
   const currentUser = auth.currentUser;
 
-  const chats = [
-    {
-      userId: 1,
-      myMessages: [
-        {
-          text: "Hey Mark! How are you doing?",
-          type: "sent",
-          date: new Date().getTime() - 2 * 60 * 60 * 1000,
-        },
-        {
-          text: "Huge Facebook update is in the progress!",
-          type: "received",
-          date: new Date().getTime() - 1 * 60 * 60 * 1000,
-        },
-        {
-          text: "Congrats! 🎉",
-          type: "sent",
-          date: new Date().getTime() - 0.5 * 60 * 60 * 1000,
-        },
-      ],
-    },
-  ];
-  const contacts = [
-    {
-      id: 1,
-      avatar: "mark-zuckerberg.jpg",
-      name: "Mark Zuckerberg",
-      status: "Life is good",
-    },
-  ];
-
   const { f7route } = props;
 
   const userId = f7route.params.id;
   const user1 = currentUser.uid;
   const usersQuery = user1.concat(userId);
-  // console.log(usersQuery);
   //console.log(userId);
-  const messagesData = chats.filter((chat) => chat.userId === userId)[0] || {
-    myMessages: [],
-  };
-  const myessagesData = chats.filter((chat) => chat.userId === userId)[0] || {
-    myMessages: [],
-  };
-
-  const contact = contacts.filter((contact) => contact.id === userId)[0];
-
+  //console.log(usersQuery);
+  const firstUserConcat = user1.concat(userId);
+  // console.log(`userId = ${userId}`);
+  // console.log(`user1 = ${user1}`);
+  // console.log(`firstUserConcat = ${firstUserConcat}`);
   const messagebarRef = useRef(null);
   const [myMessages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState("");
-
+  const [chatName, setChatName] = useState("");
   const messageTime = (message) =>
     Intl.DateTimeFormat("en", { hour: "numeric", minute: "numeric" }).format(
       message.date
@@ -96,7 +63,11 @@ export default function MessagesPage(props) {
   };
 
   const sendMessage = async () => {
-    const docRef = doc(firestore, "chats", "MyU9lVSaIWbf5uEYrKHV");
+    const user2 = f7route.params.id;
+    const user1 = currentUser.uid;
+
+    const id = user1 > user2 ? `${user1 + user2}` : `${user2 + user1}`;
+    const docRef = doc(firestore, "chats", id);
     await updateDoc(docRef, {
       messages: arrayUnion({
         uid: currentUser.uid,
@@ -105,7 +76,7 @@ export default function MessagesPage(props) {
       }),
     });
 
-    myMessages.push({
+    await myMessages.push({
       uid: currentUser.uid,
       createdAt: new Date(),
       content: messageText,
@@ -142,23 +113,59 @@ export default function MessagesPage(props) {
       $("html, body").scrollTop(0);
     }, 100);
   };
+  const addChatSession = async () => {
+    const user2 = f7route.params.id;
+    const user1 = currentUser.uid;
 
+    const id = user1 > user2 ? `${user1 + user2}` : `${user2 + user1}`;
+
+    const docRef = doc(firestore, "chats", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      return;
+    } else {
+      // doc.data() will be undefined in this case
+      console.log("data does not exist");
+      const docData = {
+        createdAt: Timestamp.fromDate(new Date()),
+        messages: [],
+        users: [user1, user2],
+      };
+
+      await setDoc(doc(firestore, "chats", id), docData);
+    }
+    setChatName(userId);
+  };
   // End of iOS web app fix
   useEffect(() => {
-    //const usersQuery = user1.concat(user2);
     f7ready(() => {
       const chatsRef = collection(firestore, "chats");
-      const q = query(chatsRef, where("users", "array-contains", usersQuery));
+      const user2 = f7route.params.id;
+      const user1 = currentUser.uid;
 
-      const unsub = onSnapshot(q, (querySnapshot) => {
-        let myMessages = [];
+      const id = user1 > user2 ? `${user1 + user2}` : `${user2 + user1}`;
+      console.log(`id = ${id}`);
+      const q = query(chatsRef, where("users", "array-contains", user1));
 
-        querySnapshot.forEach((doc) => {
-          myMessages.push(doc.data().messages);
-        });
-        setMessages(myMessages[0]);
-      });
-      return () => unsub();
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
+          let myMessages = [];
+          //console.log(snapshot);
+          snapshot.forEach((doc) => {
+            myMessages.push(doc.data().messages);
+          });
+          console.log(myMessages.length);
+          if (myMessages.length == 0) {
+            addChatSession();
+          }
+          setMessages(myMessages[0]);
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+      return () => unsubscribe();
     });
   }, []);
 
@@ -206,23 +213,24 @@ export default function MessagesPage(props) {
         )}
       </Messagebar>
       <Messages>
-        {myMessages.map((message, index) => (
-          <Message
-            key={index}
-            data-key={index}
-            first={isMessageFirst(message)}
-            last={isMessageLast(message)}
-            tail={isMessageLast(message)}
-            type={message.uid === currentUser.uid ? "sent" : "received"}
-            text={message.content}
-            className="message-appear-from-bottom"
-          >
-            <span slot="text-footer">
-              {message.type === "sent" && <DoubleTickIcon />}
-              {messageTime(message)}
-            </span>
-          </Message>
-        ))}
+        {myMessages &&
+          myMessages.map((message, index) => (
+            <Message
+              key={index}
+              data-key={index}
+              first={isMessageFirst(message)}
+              last={isMessageLast(message)}
+              tail={isMessageLast(message)}
+              type={message.uid === currentUser.uid ? "sent" : "received"}
+              text={message.content}
+              className="message-appear-from-bottom"
+            >
+              <span slot="text-footer">
+                {message.type === "sent" && <DoubleTickIcon />}
+                {messageTime(message)}
+              </span>
+            </Message>
+          ))}
       </Messages>
     </Page>
   );

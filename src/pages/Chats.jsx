@@ -7,6 +7,7 @@ import {
   Link,
   Page,
   f7ready,
+  Toolbar,
 } from "framework7-react";
 
 import "./Chats.less";
@@ -22,12 +23,13 @@ import {
   where,
   orderBy,
   getDocs,
+  onSnapshot,
 } from "firebase/firestore";
 
 import { ref, getDatabase } from "firebase/database";
 
 import { useList } from "react-firebase-hooks/database";
-import { useCollectionData } from "react-firebase-hooks/firestore";
+
 import { deepCopy } from "@firebase/util";
 
 export default function Chats(props) {
@@ -59,17 +61,15 @@ export default function Chats(props) {
     firestore;
   });
 
-  const user1 = auth.currentUser.uid;
   // console.log(auth.currentUser.uid);
   // where("uid", "not-in", [user1])
-  const myHashQuery = f7route.query.geohash;
+
   const usersRef = collection(firestore, "users");
   const q = query(
     usersRef,
     where("isOnline", "==", true),
-    where("geoHash", "==", "dnh1")
+    where("geoHash", "==", "dn5b")
   );
-  const [onlineUsers, loading, error] = useCollectionData(q);
 
   const onPageBeforeRemove = () => {
     // Destroy popup when page removed
@@ -81,10 +81,34 @@ export default function Chats(props) {
       console.log(typeof f7route.query.geohash);
     }
   };
+
+  const [myUserList, setMyUserList] = useState([]);
+  const [user1, setUser1] = useState("");
+
   useEffect(() => {
     f7ready(() => {
       if (f7route.query.geohash) {
         const myHashQuery = f7route.query.geohash;
+        console.log(f7route.query.geohash);
+
+        const usersRef = collection(firestore, "users");
+        const q = query(
+          usersRef,
+          where("isOnline", "==", true),
+          where("geoHash", "==", myHashQuery)
+        );
+        const unsub = onSnapshot(q, (querySnapshot) => {
+          let myUserList = [];
+          const user1 = auth.currentUser.uid;
+          console.log(querySnapshot);
+          querySnapshot.forEach((doc) => {
+            myUserList.push(doc.data());
+          });
+
+          setMyUserList(myUserList);
+          setUser1(user1);
+        });
+        return () => unsub();
       }
     });
   }, []);
@@ -109,13 +133,19 @@ export default function Chats(props) {
           }}
         />
       </Navbar>
+      <Toolbar bottom>
+        <Link href="/" animate={false}>
+          Home
+        </Link>
+        <Link>Blank</Link>
+      </Toolbar>
       {f7route.query.geohash ? f7route.query.geohash : "No hash homie"}
+
       <List noChevron noHairlines mediaList className="chats-list">
-        {error && <strong>Error: {error}</strong>}
-        {loading && <span>Collection: Loading...</span>}
-        {onlineUsers && (
-          <ul>
-            {onlineUsers.map((doc) => (
+        <ul>
+          {myUserList
+            .filter((allusers) => allusers.uid != user1)
+            .map((doc) => (
               <ListItem
                 key={doc.uid}
                 link={`/chats/${doc.uid}/`}
@@ -130,8 +160,7 @@ export default function Chats(props) {
                 <span slot="text">{<OnlineIcon />}</span>
               </ListItem>
             ))}
-          </ul>
-        )}
+        </ul>
       </List>
     </Page>
   );

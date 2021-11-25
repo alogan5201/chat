@@ -46,17 +46,37 @@ import {
 import { ref, set, onValue } from "firebase/database";
 import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
-
+import Geohash from "latlon-geohash";
+import HaversineGeolocation from "haversine-geolocation";
 const handleSignIn = async () => {
   const currentUser = auth.currentUser;
+  const data = await HaversineGeolocation.isGeolocationAvailable();
+  const currentPoint = {
+    latitude: data.coords.latitude,
+    longitude: data.coords.longitude,
+    accuracy: data.coords.accuracy,
+  };
+  if (data) {
+    let lat = currentPoint.latitude;
+    let lng = currentPoint.longitude;
+    const geohash = Geohash.encode(lat, lng, 4);
 
-  await setDoc(doc(firestore, "users", auth.currentUser.uid), {
-    name: auth.currentUser.displayName,
-    uid: auth.currentUser.uid,
-    avatar: auth.currentUser.photoURL,
-    isOnline: true,
-    geoHash: "",
-  });
+    await setDoc(doc(firestore, "users", auth.currentUser.uid), {
+      name: auth.currentUser.displayName,
+      uid: auth.currentUser.uid,
+      avatar: auth.currentUser.photoURL,
+      isOnline: true,
+      geoHash: geohash,
+    });
+  } else {
+    await setDoc(doc(firestore, "users", auth.currentUser.uid), {
+      name: auth.currentUser.displayName,
+      uid: auth.currentUser.uid,
+      avatar: auth.currentUser.photoURL,
+      isOnline: true,
+      geoHash: "",
+    });
+  }
 };
 
 onAuthStateChanged(auth, (user) => {
@@ -79,7 +99,7 @@ onAuthStateChanged(auth, (user) => {
         const email = user.email;
         const photoURL = user.photoURL;
         const emailVerified = user.emailVerified;
-        console.log(user);
+
         handleSignIn();
       })
       .catch((error) => {
@@ -194,60 +214,7 @@ const MyApp = () => {
       </Panel>
 
       {user ? (
-        <Views tabs className="safe-areas">
-          <Toolbar tabbar labels bottom>
-            <Link
-              tabLink="#view-home"
-              iconIos="f7:house_fill"
-              iconAurora="f7:house_fill"
-              iconMd="material:home"
-              text="Home"
-              onClick={() => onTabLinkClick("home")}
-            />
-            <Link
-              tabLink="#view-chats"
-              tabLinkActive
-              iconIos="f7:square_list_fill"
-              iconAurora="f7:square_list_fill"
-              iconMd="material:view_list"
-              text="chats"
-              onClick={() => onTabLinkClick("chats")}
-            />
-
-            <Link
-              tabLink="#view-settings"
-              iconIos="f7:gear"
-              iconAurora="f7:gear"
-              iconMd="material:settings"
-              text="Settings"
-              onClick={() => onTabLinkClick("settings")}
-            />
-          </Toolbar>
-          <View
-            id="view-home"
-            onTabShow={() => setActiveTab("home")}
-            name="home"
-            tab
-            url="/"
-          />
-
-          <View
-            id="view-chats"
-            onTabShow={() => setActiveTab("chats")}
-            name="chats"
-            tab
-            tabActive
-            url="/chats/"
-            main
-          />
-          <View
-            id="view-settings"
-            onTabShow={() => setActiveTab("settings")}
-            name="settings"
-            tab
-            url="/settings/"
-          />
-        </Views>
+        <View main className="safe-areas" url="/" />
       ) : loading ? (
         <div>
           <p>Initialising User...</p>
