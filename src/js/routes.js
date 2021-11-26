@@ -8,7 +8,7 @@ import SettingsPage from "../pages/settings.jsx";
 import DynamicRoutePage from "../pages/dynamic-route.jsx";
 import RequestAndLoad from "../pages/request-and-load.jsx";
 import NotFoundPage from "../pages/404.jsx";
-import Chats from "../pages/Chats.jsx";
+
 import Test from "../pages/test.jsx";
 
 var routes = [
@@ -23,11 +23,11 @@ var routes = [
   },
 
   {
-    path: "/chats/",
-    component: Chats,
+    path: "/chats/:id/",
+    asyncComponent: () => import("../pages/Chats"),
   },
   {
-    path: "/chats/:id/",
+    path: "/messages/:id/",
     asyncComponent: () => import("../pages/Messages"),
   },
   {

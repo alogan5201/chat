@@ -151,7 +151,7 @@ export default function MessagesPage(props) {
         q,
         (snapshot) => {
           let myMessages = [];
-          //console.log(snapshot);
+          console.log("messages snapshot render");
           snapshot.forEach((doc) => {
             myMessages.push(doc.data().messages);
           });

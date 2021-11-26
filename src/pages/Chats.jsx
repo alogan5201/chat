@@ -35,10 +35,11 @@ import { deepCopy } from "@firebase/util";
 export default function Chats(props) {
   const { f7router, f7route } = props;
 
+  const chatId = f7route.params.id;
   const onUserSelect = (user) => {
     //console.log("start new chat with", user);
     setTimeout(() => {
-      f7router.navigate(`/chats/${user.id}/`);
+      f7router.navigate(`/messages/${user.id}/`);
     }, 300);
   };
 
@@ -64,21 +65,14 @@ export default function Chats(props) {
   // console.log(auth.currentUser.uid);
   // where("uid", "not-in", [user1])
 
-  const usersRef = collection(firestore, "users");
-  const q = query(
-    usersRef,
-    where("isOnline", "==", true),
-    where("geoHash", "==", "dn5b")
-  );
-
   const onPageBeforeRemove = () => {
     // Destroy popup when page removed
     // console.log("beforeremove");
   };
   const onPageBeforeIn = () => {
     // console.log("before init");
-    if (f7route.query.geohash) {
-      //console.log(typeof f7route.query.geohash);
+    if (chatId) {
+      //console.log(typeof chatId);
     }
   };
 
@@ -87,43 +81,39 @@ export default function Chats(props) {
 
   useEffect(() => {
     f7ready(() => {
-      if (f7route.query.geohash) {
-        const myHashQuery = f7route.query.geohash;
-        // console.log(f7route.query.geohash);
+      const myHashQuery = chatId;
+      // console.log(chatId);
 
-        const usersRef = collection(firestore, "users");
-        const q = query(
-          usersRef,
-          where("isOnline", "==", true),
-          where("geoHash", "==", myHashQuery)
-        );
-        const unsub = onSnapshot(q, (querySnapshot) => {
+      const usersRef = collection(firestore, "users");
+      const q = query(
+        usersRef,
+        where("isOnline", "==", true),
+        where("geoHash", "==", myHashQuery)
+      );
+
+      const unsubscribe = onSnapshot(
+        q,
+        (snapshot) => {
           let myUserList = [];
           const user1 = auth.currentUser.uid;
-          //  console.log(querySnapshot);
-          querySnapshot.forEach((doc) => {
+          console.log("chats snapshot render");
+          snapshot.forEach((doc) => {
             myUserList.push(doc.data());
           });
 
           setMyUserList(myUserList);
           setUser1(user1);
-        });
-        return () => unsub();
-      }
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+      return () => unsubscribe();
     });
   }, []);
-  const onPageInit = () => {
-    f7ready(() => {
-      console.log(`f7route.query.geohash = ${f7route.query.geohash}`);
-    });
-  };
+
   return (
-    <Page
-      className="chats-page"
-      onPageBeforeRemove={onPageBeforeRemove}
-      onPageBeforeIn={onPageBeforeIn}
-      onPageInit={onPageInit}
-    >
+    <Page className="chats-page">
       <Navbar title="Chats" large transparent>
         <Link slot="left" onClick={async () => signOutWithGoogle()}>
           Logout
@@ -142,9 +132,9 @@ export default function Chats(props) {
         <Link href="/" animate={false}>
           Home
         </Link>
-        <Link>Blank</Link>
+        <Link href="/settings/">Settings</Link>
       </Toolbar>
-      {f7route.query.geohash ? f7route.query.geohash : "No hash homie"}
+      {chatId ? chatId : "No hash homie"}
 
       <List noChevron noHairlines mediaList className="chats-list">
         <ul>
@@ -153,7 +143,7 @@ export default function Chats(props) {
             .map((doc) => (
               <ListItem
                 key={doc.uid}
-                link={`/chats/${doc.uid}/`}
+                link={`/messages/${doc.uid}/`}
                 title={doc.name}
                 swipeout
               >

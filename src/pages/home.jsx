@@ -133,10 +133,10 @@ const HomePage = () => {
         </NavRight>
         <NavTitleLarge>My App</NavTitleLarge>
       </Navbar>
-      {/* Toolbar */}
+      {/* Toolbar     <Link href={`/chats/${hash}/`}>Chat</Link>      */}
       <Toolbar bottom>
         <Link>Left Link</Link>
-        <Link href={`/chats/?geohash=${hash}`}>Chat</Link>
+        <Link href={`/chats/${hash}/`}>Chat</Link>
       </Toolbar>
       <div>coordinates: {coords}</div>
       <div>geoHash: {hash}</div>
