@@ -36,7 +36,7 @@ export default function Chats(props) {
   const { f7router, f7route } = props;
 
   const onUserSelect = (user) => {
-    console.log("start new chat with", user);
+    //console.log("start new chat with", user);
     setTimeout(() => {
       f7router.navigate(`/chats/${user.id}/`);
     }, 300);
@@ -73,12 +73,12 @@ export default function Chats(props) {
 
   const onPageBeforeRemove = () => {
     // Destroy popup when page removed
-    console.log("beforeremove");
+    // console.log("beforeremove");
   };
   const onPageBeforeIn = () => {
-    console.log("before init");
+    // console.log("before init");
     if (f7route.query.geohash) {
-      console.log(typeof f7route.query.geohash);
+      //console.log(typeof f7route.query.geohash);
     }
   };
 
@@ -89,7 +89,7 @@ export default function Chats(props) {
     f7ready(() => {
       if (f7route.query.geohash) {
         const myHashQuery = f7route.query.geohash;
-        console.log(f7route.query.geohash);
+        // console.log(f7route.query.geohash);
 
         const usersRef = collection(firestore, "users");
         const q = query(
@@ -100,7 +100,7 @@ export default function Chats(props) {
         const unsub = onSnapshot(q, (querySnapshot) => {
           let myUserList = [];
           const user1 = auth.currentUser.uid;
-          console.log(querySnapshot);
+          //  console.log(querySnapshot);
           querySnapshot.forEach((doc) => {
             myUserList.push(doc.data());
           });
@@ -112,12 +112,17 @@ export default function Chats(props) {
       }
     });
   }, []);
-
+  const onPageInit = () => {
+    f7ready(() => {
+      console.log(`f7route.query.geohash = ${f7route.query.geohash}`);
+    });
+  };
   return (
     <Page
       className="chats-page"
       onPageBeforeRemove={onPageBeforeRemove}
       onPageBeforeIn={onPageBeforeIn}
+      onPageInit={onPageInit}
     >
       <Navbar title="Chats" large transparent>
         <Link slot="left" onClick={async () => signOutWithGoogle()}>
