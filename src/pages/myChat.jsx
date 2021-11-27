@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import {
   f7,
   List,
@@ -25,10 +25,12 @@ import {
   getDocs,
   onSnapshot,
 } from "firebase/firestore";
-
-export default function Chats(props) {
-  const { f7router, f7route } = props;
-  const chatId = f7route.params.id;
+import { UserContext } from "../components/UserContext";
+export default function MyChat(props) {
+  //const { f7router, f7route } = props;
+  //const userContext = f7route.params.id;
+  const { userContext } = useContext(UserContext);
+  console.log(`ChatComponent userContext = ${typeof userContext}`);
 
   const onUserSelect = (user) => {
     //console.log("start new chat with", user);
@@ -65,8 +67,8 @@ export default function Chats(props) {
   };
   const onPageBeforeIn = () => {
     // console.log("before init");
-    if (chatId) {
-      //console.log(typeof chatId);
+    if (userContext) {
+      //console.log(typeof userContext);
     }
   };
 
@@ -76,8 +78,8 @@ export default function Chats(props) {
 
   useEffect(() => {
     f7ready(() => {
-      const myHashQuery = chatId;
-      // console.log(chatId);
+      const myHashQuery = userContext;
+      // console.log(userContext);
 
       const usersRef = collection(firestore, "users");
       const q = query(
@@ -110,28 +112,8 @@ export default function Chats(props) {
   }, []);
 
   return (
-    <Page className="chats-page">
-      <Navbar title="Chats" large transparent>
-        <Link slot="left" onClick={async () => signOutWithGoogle()}>
-          Logout
-        </Link>
-        <Link
-          slot="right"
-          iconF7="square_pencil"
-          href="/contacts/"
-          routeProps={{
-            modalTitle: "New Chat",
-            onUserSelect,
-          }}
-        />
-      </Navbar>
-      <Toolbar bottom>
-        <Link href="/" animate={false}>
-          Home
-        </Link>
-        <Link href="/settings/">Settings</Link>
-      </Toolbar>
-      {chatId ? chatId : "No hash homie"}
+    <div>
+      {userContext ? userContext : "No hash homie"}
 
       <List noChevron noHairlines mediaList className="chats-list">
         <ul>
@@ -154,6 +136,6 @@ export default function Chats(props) {
             ))}
         </ul>
       </List>
-    </Page>
+    </div>
   );
 }

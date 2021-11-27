@@ -1,4 +1,11 @@
-import React, { useContext, useState, useEffect, useCallback } from "react";
+import React, {
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  createContext,
+  useMemo,
+} from "react";
 import {
   Page,
   Navbar,
@@ -26,87 +33,117 @@ import { auth, firestore } from "../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import HaversineGeolocation from "haversine-geolocation";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import { usePosition } from "../hooks/usePosition";
+import { UserContext } from "../components/UserContext";
+
 const HomePage = () => {
+  const { userContext, setUserContext } = useContext(UserContext);
+  //console.log(userContext);
+
+  const watch = true;
   const [coords, setCoords] = useState([]);
-  const [meetingTime, setMeetingTime] = useState(5);
-  const [hash, setHash] = useState("");
+  const [meetingTime, setRadius] = useState(5);
+  const [position, setPosition] = useState({});
+  const [error, setError] = useState(null);
+  const { latitude, longitude, fourgeohash, threegeohash } = usePosition(
+    watch,
+    { enableHighAccuracy: true }
+  );
+
+  const [currentHash, setCurrentHash] = useState("");
   const myQuery = "?geohash=bar";
 
-  //console.log(typeof userLocation);
+  const onChange = ({ coords }) => {
+    let lat = coords.latitude;
+    let lng = coords.longitude;
+
+    let fourGeohash = Geohash.encode(lat, lng, 4);
+    let threeGeohash = Geohash.encode(lat, lng, 4);
+    localStorage.setItem(
+      "geohash",
+      JSON.stringify({
+        three: threeGeohash,
+        four: fourGeohash,
+      })
+    );
+    // threeGeohash
+
+    localStorage.setItem("fourgeohash", JSON.stringify(fourGeohash));
+    setPosition({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      fourgeohash: fourGeohash,
+      threeGeohash: threeGeohash,
+    });
+  };
+  const onError = (error) => {
+    setError(error.message);
+  };
+
   useEffect(() => {
-    const getUserLocation = () => {
-      const onSuccess = async (location) => {
-        let lat = location.coords.latitude;
-        let lng = location.coords.longitude;
-        // 33.8141499 -84.4388509
-        const geohash = Geohash.encode(lat, lng, 4);
-        console.log(lat, lng);
-
-        const uid = auth.currentUser.uid;
-        const userRef = doc(firestore, "users", uid);
-        await updateDoc(userRef, {
-          geoHash: geohash,
-        });
-        setCoords([lat, lng]);
-        setHash(geohash);
-        console.log("onSuccess");
-      };
-
-      const onError = (error) => {
-        console.log(error);
-      };
-      if (!("geolocation" in navigator)) {
-        onError({
-          code: 0,
-          message: "Geolocation not supported",
-        });
+    const setGeoHash = () => {
+      const currentGeoHash = localStorage.getItem("geohash");
+      const localGeoHash = JSON.parse(currentGeoHash);
+      if (localGeoHash) {
+        const four = localGeoHash.four;
+        const three = localGeoHash.three;
+        meetingTime === 5
+          ? setCurrentHash(four)
+          : meetingTime === 10
+          ? setCurrentHash(four)
+          : setCurrentHash(three);
+        //setHashThree(three);
+        //setHashFour(four);
+      } else if (!localGeoHash) {
+        const geo = navigator.geolocation;
+        if (!geo) {
+          setError("Geolocation is not supported");
+          return;
+        }
+        const watcher = geo.watchPosition(onChange, onError);
+        return () => geo.clearWatch(watcher);
       }
-
-      navigator.geolocation.getCurrentPosition(onSuccess, onError);
     };
 
-    (async () => {
-      const data = await HaversineGeolocation.isGeolocationAvailable();
-      const currentPoint = {
-        latitude: data.coords.latitude,
-        longitude: data.coords.longitude,
-        accuracy: data.coords.accuracy,
-      };
-      if (data) {
-        let lat = currentPoint.latitude;
-        let lng = currentPoint.longitude;
-        // let userLocation = []
+    setGeoHash();
+  }, []);
 
-        const latString = JSON.stringify(lat);
-        const lngString = JSON.stringify(lng);
-        const userGeoLocation = {
-          lat: lat,
-          lng: lng,
-        };
-        // const userGeoLocation = latString.concat("", lngString);
-
-        const twelveMileRadius = Geohash.encode(lat, lng, 4);
-        const ninetyMileRadius = Geohash.encode(lat, lng, 3);
-        // console.log(auth.currentUser);
-        //console.log(lat, lng);
-
-        return meetingTime == 15
-          ? setHash(ninetyMileRadius)
-          : setHash(twelveMileRadius);
-        /**
-            if (meetingTime == 15) {
-          setHash(ninetyMileRadius);
-        } else if (15 > meetingTime) {
-          setHash(twelveMileRadius);
-        }
-         */
-      } else {
-        getUserLocation();
-        return;
+  useEffect(() => {
+    const setContext = () => {
+      const currentGeoHash = localStorage.getItem("geohash");
+      const localGeoHash = JSON.parse(currentGeoHash);
+      if (localGeoHash) {
+        const four = localGeoHash.four;
+        const three = localGeoHash.three;
+        meetingTime === 5
+          ? setUserContext(four)
+          : meetingTime === 10
+          ? setUserContext(four)
+          : setUserContext(three);
+        //setHashThree(three);
+        //setHashFour(four);
       }
-    })();
+    };
+    setContext();
   }, [meetingTime]);
-
+  /*
+  useEffect(() => {
+    const updateState = () => {
+      console.log(meetingTime);
+      const currentGeoHash = localStorage.getItem("geohash");
+      const localGeoHash = JSON.parse(currentGeoHash);
+      const four = localGeoHash.four;
+      const three = localGeoHash.three;
+      console.log(localGeoHash);
+      meetingTime === 5
+        ? setCurrentHash(three)
+        : meetingTime === 10
+        ? setCurrentHash(four)
+        : setCurrentHash(three);
+    };
+    updateState();
+  }, [meetingTime]);
+*/
   const meetingTimeComputed = () => {
     const value = meetingTime;
 
@@ -121,7 +158,24 @@ const HomePage = () => {
     }
     return formatted.join(" ");
   };
-  const getLocation = localStorage.getItem("userlocation");
+
+  const stepperPlusClick = () => {
+    const currentGeoHash = localStorage.getItem("geohash");
+    const localGeoHash = JSON.parse(currentGeoHash);
+    const four = localGeoHash.four;
+    const three = localGeoHash.three;
+    meetingTime > 10 ? setCurrentHash(three) : setCurrentHash(four);
+    console.log(meetingTime);
+  };
+
+  const stepperMinusClick = () => {
+    const currentGeoHash = localStorage.getItem("geohash");
+    const localGeoHash = JSON.parse(currentGeoHash);
+    const four = localGeoHash.four;
+    const three = localGeoHash.three;
+    meetingTime < 15 ? setCurrentHash(four) : setCurrentHash(three);
+  };
+
   //console.log(`getLocation = ${getLocation}`);
 
   return (
@@ -150,11 +204,17 @@ const HomePage = () => {
       {/* Toolbar           */}
       <Toolbar bottom>
         <Link>Left Link</Link>
-        <Link href={`/chats/${hash}/`}>Chat</Link>
+        <Link href={`/chats/${fourgeohash}/`}>Chat</Link>
       </Toolbar>
-
-      <div>coordinates: {coords}</div>
-      <div>geoHash: {hash}</div>
+      <div>
+        <div>Current Hash: {currentHash} </div>
+        latitude: {latitude}
+        <br />
+        longitude: {longitude}
+        <br />
+      </div>
+      {/*    onStepperPlusClick={stepperPlusClick}
+            onStepperMinusClick={stepperMinusClick}*/}
       <BlockTitle>Custom value format</BlockTitle>
       <List>
         <ListItem header="GeoLocation Radius" title={meetingTimeComputed()}>
@@ -169,7 +229,9 @@ const HomePage = () => {
             fill
             raised
             slot="after"
-            onStepperChange={setMeetingTime}
+            onStepperPlusClick={stepperPlusClick}
+            onStepperMinusClick={stepperMinusClick}
+            onStepperChange={setRadius}
           />
         </ListItem>
       </List>
@@ -191,6 +253,7 @@ const HomePage = () => {
 
       <BlockTitle>Navigation</BlockTitle>
       <List>
+        <ListItem link="/tabs/" title="Tabs" />
         <ListItem link="/mymessages/user/1/" title="My Messages" />
         <ListItem link="/test/" title="TestPage" />
         <ListItem link="/catalog/" title="Catalog" />

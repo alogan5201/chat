@@ -10,20 +10,13 @@ import {
   Popup,
   Page,
   Navbar,
-  Toolbar,
   NavRight,
   Link,
   Block,
-  BlockTitle,
-  LoginScreen,
   LoginScreenTitle,
   List,
   Button,
-  ListItem,
-  ListInput,
-  ListButton,
   BlockFooter,
-  useStore,
 } from "framework7-react";
 import $ from "dom7";
 import store from "../js/store";
@@ -31,20 +24,14 @@ import store from "../js/store";
 import capacitorApp from "../js/capacitor-app";
 import routes from "../js/routes";
 
-import {
-  auth,
-  signInWithGoogle,
-  database,
-  connectionStatus,
-  firestore,
-} from "../services/firebase";
+import { auth, signInWithGoogle, firestore } from "../services/firebase";
 import {
   onAuthStateChanged,
   getRedirectResult,
   GoogleAuthProvider,
 } from "firebase/auth";
-import { ref, set, onValue } from "firebase/database";
-import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+
+import { doc, setDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Geohash from "latlon-geohash";
 import HaversineGeolocation from "haversine-geolocation";
@@ -57,14 +44,8 @@ function millisToMinutesAndSeconds(millis) {
 
 const FiveMinutes = millisToMinutesAndSeconds(300000);
 
-function myFunction() {
-  setTimeout(function () {
-    console.log("sup");
-  }, 3000);
-}
-
 const handleSignIn = async () => {
-  const { user, setUser } = useContext(UserContext);
+  //const { user, setUser } = useContext(UserContext);
   const currentUser = auth.currentUser;
   const data = await HaversineGeolocation.isGeolocationAvailable();
   const currentPoint = {
@@ -155,6 +136,12 @@ const MyApp = () => {
   const [user, loading, error] = useAuthState(auth);
   const [loginScreenOpened, setLoginScreenOpened] = useState(false);
   const device = getDevice();
+  const [userContext, setUserContext] = useState(null);
+
+  const value = useMemo(
+    () => ({ userContext, setUserContext }),
+    [userContext, setUserContext]
+  );
   useEffect(() => {
     // Fix viewport scale on mobiles
     if ((f7.device.ios || f7.device.android) && f7.device.standalone) {
@@ -262,8 +249,7 @@ const MyApp = () => {
     }
 
     if (user) {
-      const data = HaversineGeolocation.isGeolocationAvailable();
-      returnUserLocation();
+      console.log("theres a user");
 
       // const userGeoLocation = latString.concat("", lngString);
     } else if (!user) {
@@ -296,7 +282,9 @@ const MyApp = () => {
       </Panel>
 
       {user ? (
-        <View main className="safe-areas" url="/" />
+        <UserContext.Provider value={value}>
+          <View main className="safe-areas" url="/" />
+        </UserContext.Provider>
       ) : loading ? (
         <div>
           <p>Initialising User...</p>

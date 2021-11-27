@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      #container {
+        position: relative;
+      }
+      .btn {
+        position: fixed;
+        bottom: 20px;
+        right: 0;
+        left: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="container" style="width: 100vw; height: 100vh">
+      <div id="dog-container" style="max-width: 100%; max-height: 800px"></div>
+      <button class="btn">More Dogs please</button>
+    </div>
+  </body>
+  <script>
+    const moreDog = async () => {
+      fetch("https://dog.ceo/api/breeds/image/random")
+        .then((response) => response.json())
+        .then((data) => {
+          let api = data.message;
+
+          console.log(api);
+
+          let container = document.getElementById("dog-container");
+          let img = document.createElement("img");
+          img.setAttribute("src", api);
+
+          container.appendChild(img);
+        });
+    };
+
+    let btn = document.querySelector(".btn");
+    btn.addEventListener("click", moreDog);
+
+    moreDog();
+  </script>
+</html>

@@ -23,9 +23,7 @@ const CatalogPage = () => {
   };
 
   return (
-    <Page name="catalog">
-      <Navbar title="Catalog" backLink="Back" />
-
+    <div>
       <List>
         {products.map((product) => (
           <ListItem
@@ -42,7 +40,7 @@ const CatalogPage = () => {
           </Button>
         </Block>
       )}
-    </Page>
+    </div>
   );
 };
 

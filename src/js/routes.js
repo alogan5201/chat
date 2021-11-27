@@ -10,7 +10,7 @@ import RequestAndLoad from "../pages/request-and-load.jsx";
 import NotFoundPage from "../pages/404.jsx";
 
 import Test from "../pages/test.jsx";
-
+import Tabs from "../pages/Tabs.jsx";
 var routes = [
   {
     path: "/",
@@ -20,6 +20,10 @@ var routes = [
   {
     path: "/about/",
     component: AboutPage,
+  },
+  {
+    path: "/tabs/",
+    component: Tabs,
   },
 
   {
