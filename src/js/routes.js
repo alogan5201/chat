@@ -58,7 +58,7 @@ var routes = [
     component: DynamicRoutePage,
   },
   {
-    path: "/test/blog/:blogId/post/:postId/",
+    path: "/test/",
     component: Test,
   },
   {

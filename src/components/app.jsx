@@ -48,6 +48,21 @@ import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Geohash from "latlon-geohash";
 import HaversineGeolocation from "haversine-geolocation";
+
+function millisToMinutesAndSeconds(millis) {
+  var minutes = Math.floor(millis / 60000);
+  var seconds = ((millis % 60000) / 1000).toFixed(0);
+  return minutes;
+}
+
+const FiveMinutes = millisToMinutesAndSeconds(300000);
+
+function myFunction() {
+  setTimeout(function () {
+    console.log("sup");
+  }, 3000);
+}
+
 const handleSignIn = async () => {
   const currentUser = auth.currentUser;
   const data = await HaversineGeolocation.isGeolocationAvailable();
@@ -165,6 +180,75 @@ const MyApp = () => {
       androidOverlaysWebView: false,
     },
   };
+  const getLocation = () => {
+    if (!navigator.geolocation) {
+      console.log("Geolocation is not supported by your browser");
+    } else {
+      console.log("Locating...");
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log(position.coords.latitude);
+          console.log(position.coords.longitude);
+        },
+        () => {
+          console.log("Unable to retrieve your location");
+        }
+      );
+    }
+  };
+
+  const locationCheckLoop = async () => {
+    const data = await HaversineGeolocation.isGeolocationAvailable();
+    const currentPoint = {
+      latitude: data.coords.latitude,
+      longitude: data.coords.longitude,
+      accuracy: data.coords.accuracy,
+    };
+
+    if (data) {
+      /* 
+      
+        navigator.geolocation.getCurrentPosition(
+        (position) => {
+          console.log(position.coords.latitude);
+          console.log(position.coords.longitude);
+        })
+      */
+      const locationResult = await navigator.geolocation.getCurrentPosition(
+        function (position) {
+          let lat = position.coords.latitude;
+          let lng = position.coords.longitude;
+
+          const userGeoLocation = {
+            lat: lat,
+            lng: lng,
+          };
+
+          const result = JSON.stringify(userGeoLocation);
+
+          return result;
+        }
+      );
+
+      const result = locationResult;
+      return result;
+    } else {
+      console.log("user has not given data yet");
+    }
+  };
+
+  const returnUserLocation = async () => {
+    const result = await locationCheckLoop();
+    localStorage.setItem("userlocation", result);
+    const setUserLocation = () => {
+      console.log(result);
+      localStorage.setItem("userlocation", result);
+    };
+
+    setInterval(function () {
+      setUserLocation();
+    }, 5000);
+  };
 
   f7ready(() => {
     // Init capacitor APIs (see capacitor-app.js)
@@ -173,7 +257,10 @@ const MyApp = () => {
     }
 
     if (user) {
-      console.log("theres a user");
+      const data = HaversineGeolocation.isGeolocationAvailable();
+      returnUserLocation();
+
+      // const userGeoLocation = latString.concat("", lngString);
     } else if (!user) {
       console.log("theres no user");
       f7.loginScreen.open();

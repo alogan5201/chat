@@ -25,12 +25,14 @@ import create from "zustand";
 import { auth, firestore } from "../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import HaversineGeolocation from "haversine-geolocation";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 const HomePage = () => {
   const [coords, setCoords] = useState([]);
   const [meetingTime, setMeetingTime] = useState(5);
   const [hash, setHash] = useState("");
   const myQuery = "?geohash=bar";
 
+  //console.log(typeof userLocation);
   useEffect(() => {
     const getUserLocation = () => {
       const onSuccess = async (location) => {
@@ -39,6 +41,7 @@ const HomePage = () => {
         // 33.8141499 -84.4388509
         const geohash = Geohash.encode(lat, lng, 4);
         console.log(lat, lng);
+
         const uid = auth.currentUser.uid;
         const userRef = doc(firestore, "users", uid);
         await updateDoc(userRef, {
@@ -72,6 +75,15 @@ const HomePage = () => {
       if (data) {
         let lat = currentPoint.latitude;
         let lng = currentPoint.longitude;
+        // let userLocation = []
+
+        const latString = JSON.stringify(lat);
+        const lngString = JSON.stringify(lng);
+        const userGeoLocation = {
+          lat: lat,
+          lng: lng,
+        };
+        // const userGeoLocation = latString.concat("", lngString);
 
         const twelveMileRadius = Geohash.encode(lat, lng, 4);
         const ninetyMileRadius = Geohash.encode(lat, lng, 3);
@@ -109,6 +121,8 @@ const HomePage = () => {
     }
     return formatted.join(" ");
   };
+  const getLocation = localStorage.getItem("userlocation");
+  //console.log(`getLocation = ${getLocation}`);
 
   return (
     <Page name="home">
@@ -133,11 +147,12 @@ const HomePage = () => {
         </NavRight>
         <NavTitleLarge>My App</NavTitleLarge>
       </Navbar>
-      {/* Toolbar     <Link href={`/chats/${hash}/`}>Chat</Link>      */}
+      {/* Toolbar           */}
       <Toolbar bottom>
         <Link>Left Link</Link>
         <Link href={`/chats/${hash}/`}>Chat</Link>
       </Toolbar>
+
       <div>coordinates: {coords}</div>
       <div>geoHash: {hash}</div>
       <BlockTitle>Custom value format</BlockTitle>
@@ -177,7 +192,7 @@ const HomePage = () => {
       <BlockTitle>Navigation</BlockTitle>
       <List>
         <ListItem link="/mymessages/user/1/" title="My Messages" />
-        <ListItem link={`/chats/?geohash=${hash}`} title="TestPage" />
+        <ListItem link="/test/" title="TestPage" />
         <ListItem link="/catalog/" title="Catalog" />
         <ListItem link="/about/" title="About" />
         <ListItem link="/form/" title="Form" />

@@ -1,51 +1,70 @@
-import React from "react";
-import { Page, Navbar, Block, Link, BlockTitle } from "framework7-react";
+import React, { useState, useEffect } from "react";
+import {
+  Page,
+  Navbar,
+  List,
+  ListItem,
+  Block,
+  Button,
+  useStore,
+} from "framework7-react";
+import store from "../js/store";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+const Test = () => {
+  const products = useStore("products");
+  const [name, setName] = useLocalStorage("name", "");
 
-const Test = (props) => {
-  const { f7route, f7router } = props;
+  const addProduct = () => {
+    store.dispatch("addProduct", {
+      id: "4",
+      title: "Apple iPhone 12",
+      description:
+        "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nisi tempora similique reiciendis, error nesciunt vero, blanditiis pariatur dolor, minima sed sapiente rerum, dolorem corrupti hic modi praesentium unde saepe perspiciatis.",
+    });
+  };
 
-  console.log(typeof f7route.query.geohash);
+  /* return {
+      count,
+      increment: () => setCount(currentCount => currentCount + 1),
+      decrement: () => setCount(currentCount => currentCount - 1),
+    };
+    
+    */
+
+  useEffect(() => {
+    // storing input name
+    localStorage.setItem("name", JSON.stringify(name));
+  }, [name]);
+
   return (
-    <Page>
-      <Navbar title="test" backLink="Back" />
-      <BlockTitle>Your Current GeoHash is {f7route.query.geohash}</BlockTitle>
-      <Block strong>
-        <ul>
-          <li>
-            <b>Url:</b> {f7route.url}
-          </li>
-          <li>
-            <b>Path:</b> {f7route.path}
-          </li>
-
-          <li>
-            <b>Params:</b>
-            <ul>
-              {Object.keys(f7route.params).map((key) => (
-                <li key={key}>
-                  <b>{key}:</b> {f7route.params[key]}
-                </li>
-              ))}
-            </ul>
-          </li>
-          <li>
-            <b>Query:</b>
-            <ul>
-              {Object.keys(f7route.query).map((key) => (
-                <li key={key}>
-                  <b>{key}:</b> {f7route.query[key]}
-                </li>
-              ))}
-            </ul>
-          </li>
-          <li>
-            <b>Route:</b> {f7route.route.path}
-          </li>
-        </ul>
-      </Block>
-      <Block strong>
-        <Link onClick={() => f7router.back()}>Go back via Router API</Link>
-      </Block>
+    <Page name="test">
+      <Navbar title="Catalog" backLink="Back" />
+      <form>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Full name"
+          aria-label="fullname"
+        />
+        <input type="submit" value="Submit"></input>
+      </form>
+      <List>
+        {products.map((product) => (
+          <ListItem
+            key={product.id}
+            title={product.title}
+            link={`/product/${product.id}/`}
+          />
+        ))}
+      </List>
+      {products.length === 3 && (
+        <Block>
+          <Button fill onClick={addProduct}>
+            Add Product
+          </Button>
+        </Block>
+      )}
     </Page>
   );
 };

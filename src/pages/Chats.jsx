@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   f7,
   List,
@@ -31,6 +31,11 @@ import { ref, getDatabase } from "firebase/database";
 import { useList } from "react-firebase-hooks/database";
 
 import { deepCopy } from "@firebase/util";
+import { useLocalStorage } from "../hooks/useLocalStorage";
+/*
+const getLocation = localStorage.getItem("userlocation");
+console.log(`getLocation = ${getLocation}`);
+*/
 
 export default function Chats(props) {
   const { f7router, f7route } = props;
@@ -78,42 +83,45 @@ export default function Chats(props) {
 
   const [myUserList, setMyUserList] = useState([]);
   const [user1, setUser1] = useState("");
+  const [userLocation, setUserLocation] = useState(() => {
+    // getting stored value
+    const saved = localStorage.getItem("userlocation");
+    const initialValue = saved;
 
+    return initialValue || "";
+  });
   useEffect(() => {
     f7ready(() => {
-      const myHashQuery = chatId;
-      // console.log(chatId);
-
-      const usersRef = collection(firestore, "users");
-      const q = query(
-        usersRef,
-        where("isOnline", "==", true),
-        where("geoHash", "==", myHashQuery)
-      );
-
-      const unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          let myUserList = [];
-          const user1 = auth.currentUser.uid;
-          console.log("chats snapshot render");
-          snapshot.forEach((doc) => {
-            myUserList.push(doc.data());
-          });
-
-          setMyUserList(myUserList);
-          setUser1(user1);
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
-      return () => unsubscribe();
+      console.log("chat page render");
     });
   }, []);
+  const onPageInit = () => {
+    const myHashQuery = chatId;
+    // console.log(chatId);
 
+    const usersRef = collection(firestore, "users");
+    const q = query(
+      usersRef,
+      where("isOnline", "==", true),
+      where("geoHash", "==", myHashQuery)
+    );
+
+    const getUserListOnce = async () => {
+      const querySnapshot = await getDocs(q);
+      let myUserList = [];
+      querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        myUserList.push(doc.data());
+      });
+      console.log(myUserList);
+    };
+
+    getUserListOnce();
+  };
+
+  //const myUserLIst = useMemo(() => computeLongestWord(data), [data]);
   return (
-    <Page className="chats-page">
+    <Page className="chats-page" onPageInit={onPageInit}>
       <Navbar title="Chats" large transparent>
         <Link slot="left" onClick={async () => signOutWithGoogle()}>
           Logout
