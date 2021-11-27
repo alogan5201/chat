@@ -24,12 +24,6 @@ import {
   Button,
   Stepper,
   f7,
-  CardHeader, 
-  Card, 
-  CardContent, 
-  CardFooter, 
-  Sheet,
-   PageContent,
 } from "framework7-react";
 import People from "../components/People";
 import Input from "../components/Input";
@@ -41,11 +35,8 @@ import HaversineGeolocation from "haversine-geolocation";
 import { useLocalStorage } from "../hooks/useLocalStorage";
 import { usePosition } from "../hooks/usePosition";
 import { UserContext } from "../components/UserContext";
-import { useAuthState } from "react-firebase-hooks/auth";
 
 const HomePage = () => {
-const [user, loading] = useAuthState(auth);
-  
   const { userContext, setUserContext } = useContext(UserContext);
   //console.log(userContext);
 
@@ -136,23 +127,23 @@ const [user, loading] = useAuthState(auth);
     setContext();
   }, [meetingTime]);
   /*
-  useEffect(() => {
-    const updateState = () => {
-      console.log(meetingTime);
-      const currentGeoHash = localStorage.getItem("geohash");
-      const localGeoHash = JSON.parse(currentGeoHash);
-      const four = localGeoHash.four;
-      const three = localGeoHash.three;
-      console.log(localGeoHash);
-      meetingTime === 5
-        ? setCurrentHash(three)
-        : meetingTime === 10
-        ? setCurrentHash(four)
-        : setCurrentHash(three);
-    };
-    updateState();
-  }, [meetingTime]);
-*/
+    useEffect(() => {
+      const updateState = () => {
+        console.log(meetingTime);
+        const currentGeoHash = localStorage.getItem("geohash");
+        const localGeoHash = JSON.parse(currentGeoHash);
+        const four = localGeoHash.four;
+        const three = localGeoHash.three;
+        console.log(localGeoHash);
+        meetingTime === 5
+          ? setCurrentHash(three)
+          : meetingTime === 10
+          ? setCurrentHash(four)
+          : setCurrentHash(three);
+      };
+      updateState();
+    }, [meetingTime]);
+  */
   const meetingTimeComputed = () => {
     const value = meetingTime;
 
@@ -186,117 +177,46 @@ const [user, loading] = useAuthState(auth);
   };
 
   //console.log(`getLocation = ${getLocation}`);
-  const onPageBeforeOut = () => {
-    // Close opened sheets on page out
-    f7.sheet.close();
-  };
 
-  const onPageBeforeRemove = () => {
-    // Destroy sheet modal when page removed
-    if (sheet.current) sheet.current.destroy();
-  };
   return (
-    <Page name="home" onPageBeforeOut={onPageBeforeOut} onPageBeforeRemove={onPageBeforeRemove}>
+    <Page name="home">
       {/* Top Navbar */}
-      <Navbar  sliding={false}>
-      
-        <NavTitle sliding></NavTitle>
-      
-       
+      <Navbar large sliding={false}>
+        <NavLeft>
+          <Link
+            iconIos="f7:menu"
+            iconAurora="f7:menu"
+            iconMd="material:menu"
+            panelOpen="left"
+          />
+        </NavLeft>
+        <NavTitle sliding>My App</NavTitle>
+        <NavRight>
+          <Link
+            iconIos="f7:menu"
+            iconAurora="f7:menu"
+            iconMd="material:menu"
+            panelOpen="right"
+          />
+        </NavRight>
+        <NavTitleLarge>My App</NavTitleLarge>
       </Navbar>
-<Row> <Col style={{padding: '20px'}}> </Col></Row>
-       <PageContent>  <Row>
-        <Col width="100" medium="50" 
-        style={{
-            padding: '0px',
-            border: 'none',
-         
-            backgroundColor: 'transparent',
-          }}>
-                <Card className="demo-facebook-card">
- <CardHeader className="no-border">
-        {user ?  <div className="demo-facebook-name">welcome back {user.displayName}!</div> : <div> ...</div>  }
-       
-    
-      </CardHeader>
-      <CardContent padding={false}>
-        <img className="chat-bubble-img" src="https://i.imgur.com/t43a4BZ.png" width="20%" />
-      </CardContent>
-      <CardFooter className="no-border">
-      
-          <Link sheetOpen=".demo-sheet-swipe-to-close">Current Location</Link>
-       
-      
-      </CardFooter>
-    </Card>
-        </Col>
-        <Col width="100" medium="50">
-        
-        </Col>
-      </Row>
-
- 
-   
-      {/* Page content */}
-   
- <Block>
-    
-      <Row>
-        <Col width="100" medium="50"   style={{
-            padding: '50px',
-        
-          }}>
-         <Button large raised fill href="/tabs/">
-             Enter Chat Room
-            </Button>
-        </Col>
-    
-      </Row>
-  
-    </Block>
-      
-
-
-
-  
-  </PageContent>
-      
- 
- 
-  <Sheet
-        className="demo-sheet-swipe-to-close"
-        style={{ height: 'auto', '--f7-sheet-bg-color': '#fff' }}
-        swipeToClose
-        backdrop
-      >
-        <PageContent>
-        
-             <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
-              <b>latitude:</b>
-            </div>
-            <div style={{ fontSize: '22px' }}>
-              <b>{latitude}</b>
-            </div>
-          </div>
-             
-             <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
-              <b>longitude:</b>
-            </div>
-            <div style={{ fontSize: '22px' }}>
-              <b>{longitude}</b>
-            </div>
-          </div>
-               <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
-              <b>Current GeoHash: </b>
-            </div>
-            <div style={{ fontSize: '22px' }}>
-              <b>{currentHash}</b>
-            </div>
-          </div>
-         <List>
+      {/* Toolbar           */}
+      <Toolbar bottom>
+        <Link>Left Link</Link>
+        <Link href="/tabs/">Chat</Link>
+      </Toolbar>
+      <div>
+        <div>Current Hash: {currentHash} </div>
+        latitude: {latitude}
+        <br />
+        longitude: {longitude}
+        <br />
+      </div>
+      {/*    onStepperPlusClick={stepperPlusClick}
+              onStepperMinusClick={stepperMinusClick}*/}
+      <BlockTitle>Custom value format</BlockTitle>
+      <List>
         <ListItem header="GeoLocation Radius" title={meetingTimeComputed()}>
           <Stepper
             className="mystepper"
@@ -315,8 +235,78 @@ const [user, loading] = useAuthState(auth);
           />
         </ListItem>
       </List>
-        </PageContent>
-      </Sheet>
+      {/* Page content */}
+      <Block strong>
+        <Row>
+          <Col width="50">
+            <Button fill raised>
+              Testbtn 1
+            </Button>
+          </Col>
+          <Col width="50">
+            <Button fill raised>
+              Testbtn 2
+            </Button>
+          </Col>
+        </Row>
+      </Block>
+
+      <BlockTitle>Navigation</BlockTitle>
+      <List>
+        <ListItem link="/tabs/" title="Tabs" />
+        <ListItem link="/mymessages/user/1/" title="My Messages" />
+        <ListItem link="/test/" title="TestPage" />
+        <ListItem link="/catalog/" title="Catalog" />
+        <ListItem link="/about/" title="About" />
+        <ListItem link="/form/" title="Form" />
+      </List>
+
+      <BlockTitle>Modals</BlockTitle>
+      <Block strong>
+        <Row>
+          <Col width="50">
+            <Button fill raised popupOpen="#my-popup">
+              Popup
+            </Button>
+          </Col>
+          <Col width="50">
+            <Button fill raised loginScreenOpen="#my-login-screen">
+              Login Screen
+            </Button>
+          </Col>
+        </Row>
+      </Block>
+
+      <BlockTitle>Panels</BlockTitle>
+      <Block strong>
+        <Row>
+          <Col width="50">
+            <Button fill raised panelOpen="left">
+              Left Panel
+            </Button>
+          </Col>
+          <Col width="50">
+            <Button fill raised panelOpen="right">
+              Right Panel
+            </Button>
+          </Col>
+        </Row>
+      </Block>
+
+      <List>
+        <ListItem
+          title="Dynamic (Component) Route"
+          link="/dynamic-route/blog/45/post/125/?foo=bar#about"
+        />
+        <ListItem
+          title="Default Route (404)"
+          link="/load-something-that-doesnt-exist/"
+        />
+        <ListItem
+          title="Request Data & Load"
+          link="/request-and-load/user/123456/"
+        />
+      </List>
     </Page>
   );
 };

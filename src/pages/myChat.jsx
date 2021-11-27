@@ -113,7 +113,7 @@ export default function MyChat(props) {
 
   return (
     <div>
-      {userContext ? userContext : "No hash homie"}
+   
 
       <List noChevron noHairlines mediaList className="chats-list">
         <ul>

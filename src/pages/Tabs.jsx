@@ -7,6 +7,10 @@ import {
   Tabs,
   Tab,
   Block,
+  Fab,
+  Icon,
+  FabBackdrop,
+  FabButton,
 } from "framework7-react";
 import CatalogPage from "./catalog.jsx";
 import MyChat from "./myChat.jsx";
@@ -16,19 +20,44 @@ export default () => {
 
   return (
     <Page pageContent={false}>
-      <Navbar title="Static Tabs" backLink="Back"></Navbar>
+      <Navbar title="GeoChat" backLink="Back"></Navbar>
+      <Toolbar labels bottom className="fab-morph-target">
+        <Link
+          tabLinkActive
+          tabLink="#tab-1"
+          iconIos="f7:map"
+          iconAurora="f7:map"
+          iconMd="material:map"
+        ></Link>
+        <Link
+          tabLinkActive
+          tabLink="#tab-2"
+          iconIos="f7:chat_bubble"
+          iconAurora="f7:chat_bubble"
+          iconMd="material:chat_bubble_outline"
+        ></Link>
+        <Link
+          tabLinkActive
+          tabLink="#tab-3"
+          iconIos="f7:gear"
+          iconAurora="f7:gear"
+          iconMd="material:settings"
+        ></Link>
+      </Toolbar>
+
+      <Fab
+        position="right-bottom"
+        slot="fixed"
+        morphTo=".toolbar.fab-morph-target"
+      >
+        <Icon ios="f7:plus" aurora="f7:plus" md="material:add"></Icon>
+        <Icon ios="f7:xmark" aurora="f7:xmark" md="material:close"></Icon>
+      </Fab>
 
       <Tabs animated>
-        <Tab id="tab-1" className="page-content" tabActive>
+        <Tab id="tab-1" className="page-content">
           <Block>
-            <Link tabLink="#tab-2">Tab 2</Link>
-            <div> usercontext is {userContext}</div>
-            <MyChat />
-          </Block>
-        </Tab>
-        <Tab id="tab-2" className="page-content">
-          <Block>
-            <Link tabLink="#tab-1">Tab 1</Link>
+            <Link backLink="Back">Tab 1</Link>
 
             <Link tabLink="#tab-3">Tab 3</Link>
 
@@ -72,6 +101,13 @@ export default () => {
               cupiditate atque aspernatur, eaque provident eligendi quaerat ea
               soluta doloremque. Iure fugit, minima facere.
             </p>
+          </Block>
+        </Tab>
+        <Tab id="tab-2" className="page-content" tabActive>
+          <Block>
+          
+          
+            <MyChat />
           </Block>
         </Tab>
         <Tab id="tab-3" className="page-content">

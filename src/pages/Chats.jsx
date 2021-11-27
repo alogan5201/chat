@@ -131,7 +131,7 @@ export default function Chats(props) {
         </Link>
         <Link href="/settings/">Settings</Link>
       </Toolbar>
-      {chatId ? chatId : "No hash homie"}
+    
 
       <List noChevron noHairlines mediaList className="chats-list">
         <ul>
