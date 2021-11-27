@@ -24,12 +24,12 @@ import {
   Button,
   Stepper,
   f7,
-  CardHeader, 
-  Card, 
-  CardContent, 
-  CardFooter, 
+  CardHeader,
+  Card,
+  CardContent,
+  CardFooter,
   Sheet,
-   PageContent,
+  PageContent,
 } from "framework7-react";
 import People from "../components/People";
 import Input from "../components/Input";
@@ -44,8 +44,8 @@ import { UserContext } from "../components/UserContext";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 const HomePage = () => {
-const [user, loading] = useAuthState(auth);
-  
+  const [user, loading] = useAuthState(auth);
+
   const { userContext, setUserContext } = useContext(UserContext);
   //console.log(userContext);
 
@@ -191,130 +191,124 @@ const [user, loading] = useAuthState(auth);
     f7.sheet.close();
   };
 
-  const onPageBeforeRemove = () => {
-    // Destroy sheet modal when page removed
-    if (sheet.current) sheet.current.destroy();
-  };
   return (
-    <Page name="home" onPageBeforeOut={onPageBeforeOut} onPageBeforeRemove={onPageBeforeRemove}>
+    <Page name="home" onPageBeforeOut={onPageBeforeOut}>
       {/* Top Navbar */}
-      <Navbar  sliding={false}>
-      
+      <Navbar sliding={false}>
         <NavTitle sliding></NavTitle>
-      
-       
       </Navbar>
-<Row> <Col style={{padding: '20px'}}> </Col></Row>
-       <PageContent>  <Row>
-        <Col width="100" medium="50" 
-        style={{
-            padding: '0px',
-            border: 'none',
-         
-            backgroundColor: 'transparent',
-          }}>
-                <Card className="demo-facebook-card">
- <CardHeader className="no-border">
-        {user ?  <div className="demo-facebook-name">welcome back {user.displayName}!</div> : <div> ...</div>  }
-       
-    
-      </CardHeader>
-      <CardContent padding={false}>
-        <img className="chat-bubble-img" src="https://i.imgur.com/t43a4BZ.png" width="20%" />
-      </CardContent>
-      <CardFooter className="no-border">
-      
-          <Link sheetOpen=".demo-sheet-swipe-to-close">Current Location</Link>
-       
-      
-      </CardFooter>
-    </Card>
-        </Col>
-        <Col width="100" medium="50">
-        
-        </Col>
-      </Row>
-
- 
-   
-      {/* Page content */}
-   
- <Block>
-    
       <Row>
-        <Col width="100" medium="50"   style={{
-            padding: '50px',
-        
-          }}>
-         <Button large raised fill href="/tabs/">
-             Enter Chat Room
-            </Button>
-        </Col>
-    
+        {" "}
+        <Col style={{ padding: "20px" }}> </Col>
       </Row>
-  
-    </Block>
-      
+      <PageContent>
+        {" "}
+        <Row>
+          <Col
+            width="100"
+            medium="50"
+            style={{
+              padding: "0px",
+              border: "none",
 
+              backgroundColor: "transparent",
+            }}
+          >
+            <Card className="demo-facebook-card">
+              <CardHeader className="no-border">
+                {user ? (
+                  <div className="demo-facebook-name">
+                    welcome back {user.displayName}!
+                  </div>
+                ) : (
+                  <div> ...</div>
+                )}
+              </CardHeader>
+              <CardContent padding={false}>
+                <img
+                  className="chat-bubble-img"
+                  src="https://i.imgur.com/t43a4BZ.png"
+                  width="20%"
+                />
+              </CardContent>
+              <CardFooter className="no-border">
+                <Link sheetOpen=".demo-sheet-swipe-to-close">
+                  Current Location
+                </Link>
+              </CardFooter>
+            </Card>
+          </Col>
+          <Col width="100" medium="50"></Col>
+        </Row>
+        {/* Page content */}
+        <Block>
+          <Row>
+            <Col
+              width="100"
+              medium="50"
+              style={{
+                padding: "50px",
+              }}
+            >
+              <Button large raised fill href="/tabs/">
+                Enter Chat Room
+              </Button>
+            </Col>
+          </Row>
+        </Block>
+      </PageContent>
 
-
-  
-  </PageContent>
-      
- 
- 
-  <Sheet
+      <Sheet
         className="demo-sheet-swipe-to-close"
-        style={{ height: 'auto', '--f7-sheet-bg-color': '#fff' }}
+        style={{ height: "auto", "--f7-sheet-bg-color": "#fff" }}
         swipeToClose
         backdrop
       >
         <PageContent>
-        
-             <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
+          <div className="display-flex padding justify-content-space-between align-items-center">
+            <div style={{ fontSize: "18px" }}>
               <b>latitude:</b>
             </div>
-            <div style={{ fontSize: '22px' }}>
+            <div style={{ fontSize: "22px" }}>
               <b>{latitude}</b>
             </div>
           </div>
-             
-             <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
+
+          <div className="display-flex padding justify-content-space-between align-items-center">
+            <div style={{ fontSize: "18px" }}>
               <b>longitude:</b>
             </div>
-            <div style={{ fontSize: '22px' }}>
+            <div style={{ fontSize: "22px" }}>
               <b>{longitude}</b>
             </div>
           </div>
-               <div className="display-flex padding justify-content-space-between align-items-center">
-            <div style={{ fontSize: '18px' }}>
+          <div className="display-flex padding justify-content-space-between align-items-center">
+            <div style={{ fontSize: "18px" }}>
               <b>Current GeoHash: </b>
             </div>
-            <div style={{ fontSize: '22px' }}>
+            <div style={{ fontSize: "22px" }}>
               <b>{currentHash}</b>
             </div>
           </div>
-         <List>
-        <ListItem header="GeoLocation Radius" title={meetingTimeComputed()}>
-          <Stepper
-            className="mystepper"
-            min={5}
-            max={15}
-            step={5}
-            value={meetingTime}
-            buttonsOnly={true}
-            small
-            fill
-            raised
-            slot="after"
-            onStepperPlusClick={stepperPlusClick}
-            onStepperMinusClick={stepperMinusClick}
-            onStepperChange={setRadius}
-          />
-        </ListItem>
-      </List>
+          <List>
+            <ListItem header="GeoLocation Radius" title={meetingTimeComputed()}>
+              <Stepper
+                className="mystepper"
+                min={5}
+                max={15}
+                step={5}
+                value={meetingTime}
+                buttonsOnly={true}
+                small
+                fill
+                raised
+                slot="after"
+                onStepperPlusClick={stepperPlusClick}
+                onStepperMinusClick={stepperMinusClick}
+                onStepperChange={setRadius}
+              />
+            </ListItem>
+          </List>
         </PageContent>
       </Sheet>
     </Page>
