@@ -35,7 +35,7 @@ import People from "../components/People";
 import Input from "../components/Input";
 import Geohash from "latlon-geohash";
 import create from "zustand";
-import { auth, firestore } from "../services/firebase";
+import { auth, firestore, signOutWithGoogle } from "../services/firebase";
 import { doc, updateDoc } from "firebase/firestore";
 import HaversineGeolocation from "haversine-geolocation";
 import { useLocalStorage } from "../hooks/useLocalStorage";
@@ -196,6 +196,16 @@ const HomePage = () => {
       {/* Top Navbar */}
       <Navbar sliding={false}>
         <NavTitle sliding></NavTitle>
+
+        <Link
+          iconIos="f7:arrow_left_to_line"
+          iconAurora="f7:arrow_left_to_line"
+          iconMd="material:arrow_back"
+          slot="left"
+          onClick={async () => signOutWithGoogle()}
+        >
+          {" "}
+        </Link>
       </Navbar>
       <Row>
         {" "}
