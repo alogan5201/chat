@@ -30,6 +30,7 @@ import {
   CardFooter,
   Sheet,
   PageContent,
+  Popover,
 } from "framework7-react";
 import People from "../components/People";
 import Input from "../components/Input";
@@ -42,7 +43,7 @@ import { useLocalStorage } from "../hooks/useLocalStorage";
 import { usePosition } from "../hooks/usePosition";
 import { UserContext } from "../components/UserContext";
 import { useAuthState } from "react-firebase-hooks/auth";
-
+import "./home.less";
 const HomePage = () => {
   const [user, loading] = useAuthState(auth);
 
@@ -194,7 +195,7 @@ const HomePage = () => {
   return (
     <Page name="home" onPageBeforeOut={onPageBeforeOut}>
       {/* Top Navbar */}
-      <Navbar sliding={false}>
+      <Navbar sliding={false} transparent={true}>
         <NavTitle sliding></NavTitle>
 
         <Link
@@ -206,6 +207,20 @@ const HomePage = () => {
         >
           {" "}
         </Link>
+        <NavRight>
+          {user && (
+            <div
+              className="demo-facebook-avatar"
+              onClick={async () => signOutWithGoogle()}
+            >
+              <img
+                src={user.photoURL || "/avatars/person-circle.svg"}
+                width="34"
+                height="34"
+              />
+            </div>
+          )}
+        </NavRight>
       </Navbar>
       <Row>
         {" "}
