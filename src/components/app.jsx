@@ -48,7 +48,7 @@ import { collection, doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { useAuthState } from "react-firebase-hooks/auth";
 import Geohash from "latlon-geohash";
 import HaversineGeolocation from "haversine-geolocation";
-
+import { UserContext } from "../components/UserContext";
 function millisToMinutesAndSeconds(millis) {
   var minutes = Math.floor(millis / 60000);
   var seconds = ((millis % 60000) / 1000).toFixed(0);
@@ -64,6 +64,7 @@ function myFunction() {
 }
 
 const handleSignIn = async () => {
+  const { user, setUser } = useContext(UserContext);
   const currentUser = auth.currentUser;
   const data = await HaversineGeolocation.isGeolocationAvailable();
   const currentPoint = {
@@ -83,8 +84,22 @@ const handleSignIn = async () => {
       isOnline: true,
       geoHash: geohash,
     });
+    await setUser({
+      name: auth.currentUser.displayName,
+      uid: auth.currentUser.uid,
+      avatar: auth.currentUser.photoURL,
+      isOnline: true,
+      geoHash: geohash,
+    });
   } else {
     await setDoc(doc(firestore, "users", auth.currentUser.uid), {
+      name: auth.currentUser.displayName,
+      uid: auth.currentUser.uid,
+      avatar: auth.currentUser.photoURL,
+      isOnline: true,
+      geoHash: "",
+    });
+    await setUser({
       name: auth.currentUser.displayName,
       uid: auth.currentUser.uid,
       avatar: auth.currentUser.photoURL,
@@ -214,23 +229,17 @@ const MyApp = () => {
           console.log(position.coords.longitude);
         })
       */
-      const locationResult = await navigator.geolocation.getCurrentPosition(
-        function (position) {
-          let lat = position.coords.latitude;
-          let lng = position.coords.longitude;
 
-          const userGeoLocation = {
-            lat: lat,
-            lng: lng,
-          };
+      let lat = currentPoint.latitude;
+      let lng = currentPoint.longitude;
 
-          const result = JSON.stringify(userGeoLocation);
+      const userGeoLocation = {
+        lat: lat,
+        lng: lng,
+      };
 
-          return result;
-        }
-      );
-
-      const result = locationResult;
+      const result = JSON.stringify(userGeoLocation);
+      console.log(result);
       return result;
     } else {
       console.log("user has not given data yet");
@@ -240,14 +249,10 @@ const MyApp = () => {
   const returnUserLocation = async () => {
     const result = await locationCheckLoop();
     localStorage.setItem("userlocation", result);
-    const setUserLocation = () => {
-      console.log(result);
-      localStorage.setItem("userlocation", result);
-    };
 
     setInterval(function () {
-      setUserLocation();
-    }, 5000);
+      locationCheckLoop();
+    }, 1000000);
   };
 
   f7ready(() => {
@@ -267,16 +272,6 @@ const MyApp = () => {
     }
     // Call F7 APIs here
   });
-  function onTabLinkClick(tab) {
-    if (previousTab.current !== activeTab) {
-      previousTab.current = activeTab;
-      return;
-    }
-    if (activeTab === tab) {
-      $(`#view-${tab}`)[0].f7View.router.back();
-    }
-    previousTab.current = tab;
-  }
 
   return (
     <App {...f7params}>

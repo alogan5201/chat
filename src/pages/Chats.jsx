@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   f7,
   List,
@@ -32,10 +38,52 @@ import { useList } from "react-firebase-hooks/database";
 
 import { deepCopy } from "@firebase/util";
 import { useLocalStorage } from "../hooks/useLocalStorage";
+import useFetch, { Provider } from "use-http";
 /*
 const getLocation = localStorage.getItem("userlocation");
 console.log(`getLocation = ${getLocation}`);
 */
+
+const TodoList = () => {
+  const [title, setTitle] = useState("");
+  const [todos, setTodos] = useState([]);
+  const { get, post, response, loading, error } = useFetch({ data: [] });
+  const [userlocation, setUserLocation] = useLocalStorage("userlocation", "");
+
+  const increment = useCallback(
+    (n) => {
+      setCount((c) => c + n);
+    },
+    [setCount]
+  );
+
+  const loadInitialTodos = useCallback(async () => {
+    // const { ok } = response // BAD, DO NOT DO THIS
+    const initialTodos = await get("/v1/satellites/25544");
+    if (response.ok) {
+      let arr = [];
+      arr.push(initialTodos);
+      console.log("fetch rendered");
+      setTodos(arr);
+    }
+  }, [get, response]);
+
+  useEffect(() => {
+    loadInitialTodos();
+  }, [loadInitialTodos]); // componentDidMount
+
+  return (
+    <div>
+      {loading && "Loading"}
+      {error && "Error!"}
+      {todos.map((todo, i) => (
+        <div key={i}>
+          {i + 1}. {todo.latitude} {todo.longitude}
+        </div>
+      ))}
+    </div>
+  );
+};
 
 export default function Chats(props) {
   const { f7router, f7route } = props;
@@ -83,18 +131,16 @@ export default function Chats(props) {
 
   const [myUserList, setMyUserList] = useState([]);
   const [user1, setUser1] = useState("");
-  const [userLocation, setUserLocation] = useState(() => {
-    // getting stored value
-    const saved = localStorage.getItem("userlocation");
-    const initialValue = saved;
+  const [userlocation, setUserLocation] = useLocalStorage("userlocation", "");
 
-    return initialValue || "";
-  });
+  console.log(userlocation);
   useEffect(() => {
     f7ready(() => {
       console.log("chat page render");
     });
-  }, []);
+    console.log("useEffect outside");
+  }, [userlocation]);
+
   const onPageInit = () => {
     const myHashQuery = chatId;
     // console.log(chatId);
@@ -140,10 +186,17 @@ export default function Chats(props) {
         <Link href="/" animate={false}>
           Home
         </Link>
+
         <Link href="/settings/">Settings</Link>
       </Toolbar>
       {chatId ? chatId : "No hash homie"}
 
+      <Provider
+        url="https://api.wheretheiss.at"
+        options={{ cachePolicy: "no-cache" }}
+      >
+        <TodoList />
+      </Provider>
       <List noChevron noHairlines mediaList className="chats-list">
         <ul>
           {myUserList

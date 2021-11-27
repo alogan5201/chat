@@ -64,7 +64,9 @@ export const signOutWithGoogle = async () => {
   await updateDoc(doc(firestore, "users", auth.currentUser.uid), {
     isOnline: false,
   });
+
   await signOut(auth);
+  await setUser(null);
 };
 
 const authState = () => {
