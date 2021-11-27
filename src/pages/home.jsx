@@ -198,15 +198,6 @@ const HomePage = () => {
       <Navbar sliding={false} transparent={true}>
         <NavTitle sliding></NavTitle>
 
-        <Link
-          iconIos="f7:arrow_left_to_line"
-          iconAurora="f7:arrow_left_to_line"
-          iconMd="material:arrow_back"
-          slot="left"
-          onClick={async () => signOutWithGoogle()}
-        >
-          {" "}
-        </Link>
         <NavRight>
           {user && (
             <div
